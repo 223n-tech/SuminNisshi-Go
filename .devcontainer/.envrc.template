@@ -1,0 +1,20 @@
+# Database configurations
+export DB_HOST=db
+export DB_PORT=3306
+export DB_USER=suiminnisshi
+export DB_PASSWORD=suiminnisshi_password
+export DB_NAME=suiminnisshi
+
+# Application settings
+export APP_ENV=development
+export APP_PORT=8080
+export APP_HOST=localhost
+export APP_SECRET=your-secret-key-here
+
+# 開発環境用の設定
+export GO111MODULE=on
+export CGO_ENABLED=1
+
+# PATH設定
+PATH_add /usr/local/go/bin
+PATH_add /go/bin

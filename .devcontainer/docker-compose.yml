@@ -1,0 +1,42 @@
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - go-cache:/go
+      - vscode:/vscode:cached
+    user: vscode
+    command: ["/usr/local/bin/setup-envrc.sh"]
+    environment:
+      - DB_HOST=db
+      - DB_USER=suiminnisshi
+      - DB_PASSWORD=suiminnisshi_password
+      - DB_NAME=suiminnisshi
+    networks:
+      - suiminnisshi-network
+
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: suiminnisshi
+      MYSQL_USER: suiminnisshi
+      MYSQL_PASSWORD: suiminnisshi_password
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - suiminnisshi-network
+    ports:
+      - "3306:3306"
+
+volumes:
+  go-cache:
+  mariadb-data:
+  vscode:
+    external: true
+
+networks:
+  suiminnisshi-network:
+    driver: bridge
