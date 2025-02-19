@@ -1,0 +1,43 @@
+{{define "sidebar"}}
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="/" class="brand-link">
+        <img src="/static/adminlte/img/AdminLTELogo.png" alt="SuiminNisshi Logo"
+            class="brand-image img-circle elevation-3" style="opacity: .8">
+        <span class="brand-text font-weight-light">SuiminNisshi</span>
+    </a>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Sidebar Menu -->
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link {{if eq .ActiveMenu " dashboard"}}active{{end}}">
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p>ダッシュボード</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/sleep-records" class="nav-link {{if eq .ActiveMenu " sleep-records"}}active{{end}}">
+                        <i class="nav-icon fas fa-bed"></i>
+                        <p>睡眠記録</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/statistics" class="nav-link {{if eq .ActiveMenu " statistics"}}active{{end}}">
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p>統計情報</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/settings" class="nav-link {{if eq .ActiveMenu " settings"}}active{{end}}">
+                        <i class="nav-icon fas fa-cog"></i>
+                        <p>設定</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</aside>
+{{end}}

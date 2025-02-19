@@ -1,0 +1,172 @@
+{{define "content-header"}}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">ダッシュボード</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/">ホーム</a></li>
+                    <li class="breadcrumb-item active">ダッシュボード</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "content"}}
+<!-- Info boxes -->
+<div class="row">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-info"><i class="fas fa-bed"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">平均睡眠時間</span>
+                <span class="info-box-number">7.2<small>時間</small></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-success"><i class="fas fa-clock"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">平均就寝時刻</span>
+                <span class="info-box-number">23:30</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-warning"><i class="fas fa-sun"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">平均起床時刻</span>
+                <span class="info-box-number">6:45</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-danger"><i class="fas fa-chart-line"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">睡眠スコア</span>
+                <span class="info-box-number">85</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main row -->
+<div class="row">
+    <!-- 睡眠時間グラフ -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">睡眠時間の推移</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart">
+                    <canvas id="sleepChart"
+                        style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近の睡眠記録 -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">最近の睡眠記録</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <ul class="products-list product-list-in-card pl-2 pr-2">
+                    <li class="item">
+                        <div class="product-info">
+                            <a href="javascript:void(0)" class="product-title">
+                                2025/02/19
+                                <span class="badge badge-success float-right">8.0時間</span>
+                            </a>
+                            <span class="product-description">
+                                23:00 〜 7:00 - 睡眠スコア: 90
+                            </span>
+                        </div>
+                    </li>
+                    <li class="item">
+                        <div class="product-info">
+                            <a href="javascript:void(0)" class="product-title">
+                                2025/02/18
+                                <span class="badge badge-warning float-right">6.5時間</span>
+                            </a>
+                            <span class="product-description">
+                                23:30 〜 6:00 - 睡眠スコア: 75
+                            </span>
+                        </div>
+                    </li>
+                    <li class="item">
+                        <div class="product-info">
+                            <a href="javascript:void(0)" class="product-title">
+                                2025/02/17
+                                <span class="badge badge-success float-right">7.5時間</span>
+                            </a>
+                            <span class="product-description">
+                                23:15 〜 6:45 - 睡眠スコア: 85
+                            </span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer text-center">
+                <a href="/sleep-records" class="uppercase">すべての記録を見る</a>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "styles"}}
+<!-- Chart.js -->
+<link rel="stylesheet" href="/static/adminlte/plugins/chart.js/Chart.min.css">
+{{end}}
+
+{{define "scripts"}}
+<!-- Chart.js -->
+<script src="/static/adminlte/plugins/chart.js/Chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var ctx = document.getElementById('sleepChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['2/13', '2/14', '2/15', '2/16', '2/17', '2/18', '2/19'],
+                datasets: [{
+                    label: '睡眠時間',
+                    data: [7.5, 6.8, 7.2, 8.0, 7.5, 6.5, 8.0],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 12
+                    }
+                }
+            }
+        });
+    });
+</script>
+{{end}}

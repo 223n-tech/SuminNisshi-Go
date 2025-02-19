@@ -1,0 +1,223 @@
+{{define "content-header"}}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">プロフィール</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/">ホーム</a></li>
+                    <li class="breadcrumb-item active">プロフィール</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "content"}}
+<div class="row">
+    <div class="col-md-3">
+        <!-- プロフィールカード -->
+        <div class="card card-primary card-outline">
+            <div class="card-body box-profile">
+                <div class="text-center">
+                    <img class="profile-user-img img-fluid img-circle" src="/static/adminlte/img/user4-128x128.jpg"
+                        alt="User profile picture">
+                </div>
+
+                <h3 class="profile-username text-center">{{.User.Name}}</h3>
+
+                <p class="text-muted text-center">睡眠記録継続日数: 30日</p>
+
+                <ul class="list-group list-group-unbordered mb-3">
+                    <li class="list-group-item">
+                        <b>平均睡眠時間</b> <a class="float-right">7.5時間</a>
+                    </li>
+                    <li class="list-group-item">
+                        <b>平均就寝時刻</b> <a class="float-right">23:00</a>
+                    </li>
+                    <li class="list-group-item">
+                        <b>平均起床時刻</b> <a class="float-right">6:30</a>
+                    </li>
+                </ul>
+
+                <a href="/settings" class="btn btn-primary btn-block"><b>設定を変更</b></a>
+            </div>
+        </div>
+
+        <!-- 目標設定カード -->
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">睡眠目標</h3>
+            </div>
+            <div class="card-body">
+                <strong><i class="fas fa-bed mr-1"></i> 目標睡眠時間</strong>
+                <p class="text-muted">7時間30分</p>
+                <hr>
+                <strong><i class="fas fa-moon mr-1"></i> 目標就寝時刻</strong>
+                <p class="text-muted">23:00</p>
+                <hr>
+                <strong><i class="fas fa-sun mr-1"></i> 目標起床時刻</strong>
+                <p class="text-muted">6:30</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header p-2">
+                <ul class="nav nav-pills">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#activity" data-toggle="tab">最近の記録</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#timeline" data-toggle="tab">タイムライン</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-toggle="tab">プロフィール編集</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- 最近の記録タブ -->
+                    <div class="active tab-pane" id="activity">
+                        {{range $i := seq 0 5}}
+                        <div class="post">
+                            <div class="user-block">
+                                <img class="img-circle img-bordered-sm" src="/static/adminlte/img/user1-128x128.jpg"
+                                    alt="user image">
+                                <span class="username">
+                                    <a href="#">{{$.User.Name}}</a>
+                                </span>
+                                <span class="description">記録日時 - 2025/02/{{sub 20 $i}}</span>
+                            </div>
+                            <p>
+                                就寝時刻: 23:00<br>
+                                起床時刻: 6:30<br>
+                                睡眠時間: 7時間30分<br>
+                                睡眠の質: 良好
+                            </p>
+                            <p>
+                                <a href="#" class="link-black text-sm">
+                                    <i class="fas fa-edit mr-1"></i> 編集
+                                </a>
+                            </p>
+                        </div>
+                        {{end}}
+                    </div>
+
+                    <!-- タイムラインタブ -->
+                    <div class="tab-pane" id="timeline">
+                        <div class="timeline timeline-inverse">
+                            {{range $i := seq 0 5}}
+                            <div class="time-label">
+                                <span class="bg-primary">2025/02/{{sub 20 $i}}</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-bed bg-primary"></i>
+                                <div class="timeline-item">
+                                    <span class="time"><i class="far fa-clock"></i> 23:00</span>
+                                    <h3 class="timeline-header">就寝</h3>
+                                    <div class="timeline-body">
+                                        睡眠スコア: 85<br>
+                                        睡眠の質: 良好
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <i class="fas fa-sun bg-success"></i>
+                                <div class="timeline-item">
+                                    <span class="time"><i class="far fa-clock"></i> 6:30</span>
+                                    <h3 class="timeline-header">起床</h3>
+                                    <div class="timeline-body">
+                                        気分: 良好<br>
+                                        睡眠時間: 7時間30分
+                                    </div>
+                                </div>
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+
+                    <!-- プロフィール編集タブ -->
+                    <div class="tab-pane" id="settings">
+                        <form class="form-horizontal">
+                            <div class="form-group row">
+                                <label for="inputName" class="col-sm-2 col-form-label">名前</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="inputName" placeholder="名前"
+                                        value="{{.User.Name}}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputEmail" class="col-sm-2 col-form-label">メールアドレス</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control" id="inputEmail" placeholder="メールアドレス"
+                                        value="{{.User.Email}}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputBedtime" class="col-sm-2 col-form-label">目標就寝時刻</label>
+                                <div class="col-sm-10">
+                                    <input type="time" class="form-control" id="inputBedtime" value="23:00">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputWakeup" class="col-sm-2 col-form-label">目標起床時刻</label>
+                                <div class="col-sm-10">
+                                    <input type="time" class="form-control" id="inputWakeup" value="06:30">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="offset-sm-2 col-sm-10">
+                                    <button type="submit" class="btn btn-primary">保存</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "styles"}}
+<style>
+    .timeline {
+        margin: 0;
+        padding: 0;
+        position: relative;
+    }
+
+    .timeline::before {
+        background: #dee2e6;
+        bottom: 0;
+        content: '';
+        left: 31px;
+        margin: 0;
+        position: absolute;
+        top: 0;
+        width: 2px;
+    }
+</style>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // プロフィール編集フォームの送信
+        const profileForm = document.querySelector('#settings form');
+        if (profileForm) {
+            profileForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                // TODO: プロフィール更新の処理
+                alert('プロフィールを更新しました');
+            });
+        }
+    });
+</script>
+{{end}}
