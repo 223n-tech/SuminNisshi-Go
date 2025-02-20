@@ -111,6 +111,11 @@ func (h *SleepRecordHandler) New(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "睡眠記録の作成",
 		ActiveMenu: "sleep-records",
+		Data: map[string]interface{}{
+			"Record": &SleepRecord{
+				Date: time.Now(), // 現在の日付をデフォルト値として設定
+			},
+		},
 	}
 
 	err := h.templates.Render(w, "sleep-records-form.html", data)

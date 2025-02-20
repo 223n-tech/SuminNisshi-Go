@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+
+	"github.com/223n-tech/SuiminNisshi-Go/internal/models"
 )
 
 // ProfileHandler プロフィール画面のハンドラー
@@ -28,9 +30,10 @@ func (h *ProfileHandler) Profile(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "プロフィール",
 		ActiveMenu: "profile",
-		User: &User{
+		User: &models.User{
 			Name:  "テストユーザー",
 			Email: "test@example.com",
+			Timezone: "Asia/Tokyo",
 		},
 	}
 

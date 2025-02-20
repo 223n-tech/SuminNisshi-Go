@@ -1,53 +1,44 @@
 package handler
 
 import (
-	"html/template"
 	"log"
 	"net/http"
-	"path/filepath"
 )
 
 // ErrorHandler エラーページのハンドラー
 type ErrorHandler struct {
-	templates map[int]*template.Template
+	templates *TemplateManager
 }
 
-// NewErrorHandler エラーハンドラーを作成
-func NewErrorHandler() (*ErrorHandler, error) {
-	handler := &ErrorHandler{
-		templates: make(map[int]*template.Template),
+// NewErrorHandlerWithTemplates エラーハンドラーを作成
+func NewErrorHandlerWithTemplates(templates *TemplateManager) *ErrorHandler {
+	return &ErrorHandler{
+		templates: templates,
 	}
-
-	// エラーテンプレートの読み込み
-	errorPages := map[int]string{
-		http.StatusNotFound:            "404.html",
-		http.StatusInternalServerError: "500.html",
-		http.StatusForbidden:          "403.html",
-	}
-
-	for status, filename := range errorPages {
-		template, err := template.ParseFiles(filepath.Join("web", "template", "errors", filename))
-		if err != nil {
-			return nil, err
-		}
-		handler.templates[status] = template
-	}
-
-	return handler, nil
 }
 
 // ServeHTTP エラーページを表示
 func (h *ErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, status int) {
-	template, exists := h.templates[status]
-	if !exists {
-		log.Printf("No template for status %d, falling back to 500", status)
-		template = h.templates[http.StatusInternalServerError]
-		status = http.StatusInternalServerError
+	data := &TemplateData{
+		Title: http.StatusText(status),
 	}
 
-	w.WriteHeader(status)
-	if err := template.Execute(w, nil); err != nil {
-		log.Printf("Error executing template: %v", err)
+	var templateName string
+	switch status {
+	case http.StatusNotFound:
+		templateName = "404.html"
+	case http.StatusForbidden:
+		templateName = "403.html"
+	case http.StatusMethodNotAllowed:
+		templateName = "405.html"
+	default:
+		templateName = "500.html"
+	}
+
+	err := h.templates.Render(w, templateName, data)
+	if err != nil {
+		log.Printf("Error rendering template %s: %v", templateName, err)
+		http.Error(w, http.StatusText(status), status)
 	}
 }
 
@@ -65,4 +56,9 @@ func (h *ErrorHandler) Handle500(w http.ResponseWriter, r *http.Request, err err
 // Handle403 403エラーページを表示
 func (h *ErrorHandler) Handle403(w http.ResponseWriter, r *http.Request) {
 	h.ServeHTTP(w, r, http.StatusForbidden)
+}
+
+// Handle405 405エラーページを表示
+func (h *ErrorHandler) Handle405(w http.ResponseWriter, r *http.Request) {
+	h.ServeHTTP(w, r, http.StatusMethodNotAllowed)
 }

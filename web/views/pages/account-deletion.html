@@ -1,0 +1,113 @@
+{{define "content"}}
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>アカウント削除</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/dashboard">ホーム</a></li>
+                        <li class="breadcrumb-item"><a href="/settings">設定</a></li>
+                        <li class="breadcrumb-item active">アカウント削除</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- Warning Box -->
+                    <div class="card card-danger">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                重要な警告
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <h5><i class="icon fas fa-exclamation-triangle"></i> 注意！</h5>
+                                アカウントを削除すると、以下のデータが完全に削除され、復元することはできません：
+                                <ul class="mt-2">
+                                    <li>すべての睡眠記録</li>
+                                    <li>統計データ</li>
+                                    <li>個人設定</li>
+                                    <li>その他のアカウント関連情報</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confirmation Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">削除の確認</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="deleteAccountForm" action="/settings/account/delete" method="POST">
+                                <!-- CSRF Token -->
+                                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+                                <!-- Password Confirmation -->
+                                <div class="form-group">
+                                    <label for="password">現在のパスワード</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <small class="form-text text-muted">セキュリティのため、現在のパスワードを入力してください。</small>
+                                </div>
+
+                                <!-- Confirmation Checkbox -->
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="deleteConfirm"
+                                            name="confirm" required>
+                                        <label class="custom-control-label" for="deleteConfirm">
+                                            私は上記の警告を読み、アカウントとすべてのデータを完全に削除することを理解し、同意します。
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Additional Information -->
+                                <div class="form-group">
+                                    <label for="feedback">フィードバック（任意）</label>
+                                    <textarea class="form-control" id="feedback" name="feedback" rows="3"
+                                        placeholder="サービス改善のため、よろしければ退会理由をお聞かせください。"></textarea>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                        <i class="fas fa-user-times mr-2"></i>アカウントを削除する
+                                    </button>
+                                    <a href="/settings" class="btn btn-secondary ml-2">
+                                        <i class="fas fa-times mr-2"></i>キャンセル
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Custom JavaScript -->
+<script>
+    document.getElementById('deleteConfirm').addEventListener('change', function () {
+        document.getElementById('deleteButton').disabled = !this.checked;
+    });
+
+    document.getElementById('deleteAccountForm').addEventListener('submit', function (e) {
+        if (!confirm('本当にアカウントを削除してもよろしいですか？この操作は取り消すことができません。')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{{end}}

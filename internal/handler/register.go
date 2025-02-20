@@ -56,7 +56,7 @@ func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &RegisterData{
+	registerData := &RegisterData{
 		Name:                 r.FormValue("name"),
 		Email:                r.FormValue("email"),
 		Password:             r.FormValue("password"),
@@ -65,10 +65,12 @@ func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// バリデーション
-	if err := h.validateRegisterData(data); err != nil {
+	if err := h.validateRegisterData(registerData); err != nil {
 		data := &TemplateData{
 			Title: "アカウント登録",
-			Data:  data,
+			Data: map[string]interface{}{
+				"Form": registerData,
+			},
 			Flash: &Flash{
 				Type:    "danger",
 				Message: err.Error(),

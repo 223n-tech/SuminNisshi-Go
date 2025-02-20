@@ -10,32 +10,24 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/223n-tech/SuiminNisshi-Go/internal/models"
 )
 
-// TemplateData はテンプレートに渡すデータの構造体です
+// TemplateData テンプレートに渡すデータの構造体
 type TemplateData struct {
-	Title      string                 // ページタイトル
-	ActiveMenu string                 // アクティブなメニュー項目
-	User       *User                  // ログインユーザー情報
-	Data       interface{}            // ページ固有のデータ
-	Flash      *Flash                 // フラッシュメッセージ
-	CSRF       string                 // CSRFトークン
-	Meta       map[string]interface{} // メタデータ
+	Title      string
+	ActiveMenu string
+	User       *models.User              // models.Userを使用
+	Data       map[string]interface{}
+	Flash      *Flash
+	Meta       map[string]interface{}    // Metaフィールドを追加
 }
 
-// Flash はフラッシュメッセージの構造体です
+// Flash フラッシュメッセージの構造体
 type Flash struct {
-	Type    string // success, info, warning, danger
+	Type    string // success, error, warning, info
 	Message string
-}
-
-// User はユーザー情報の構造体です
-type User struct {
-	ID       int64
-	Email    string
-	Name     string
-	IsAdmin  bool
-	Settings map[string]interface{}
 }
 
 // TemplateManager はテンプレート管理を担当する構造体です

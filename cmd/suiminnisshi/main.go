@@ -99,6 +99,52 @@ func main() {
 	dashboardHandler := handler.NewDashboardHandler(tm, svc)
 	dashboardHandler.RegisterRoutes(router)
 
+	// エラーハンドラーの初期化
+	logger.Printf("[Initialize] Initializing error handler...")
+	errorHandler := handler.NewErrorHandlerWithTemplates(tm)
+	r.NotFound(errorHandler.Handle404)
+	r.MethodNotAllowed(errorHandler.Handle404)
+
+	// パスワードリセットハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering password reset routes...")	
+	passwordResetHandler := handler.NewPasswordResetHandler(tm)
+	passwordResetHandler.RegisterRoutes(r)
+
+	// プライバシーポリシーハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering privacy policy routes...")
+	privacyPolicyHandler := handler.NewPrivacyHandler(tm)
+	privacyPolicyHandler.RegisterRoutes(r)
+
+	// プロフィールハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering profile routes...")
+	profileHandler := handler.NewProfileHandler(tm)
+	profileHandler.RegisterRoutes(router)
+
+	// ユーザー登録ハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering registration routes...")
+	registrationHandler := handler.NewRegisterHandler(tm)
+	registrationHandler.RegisterRoutes(r)
+
+	// 設定ハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering settings routes...")
+	settingsHandler := handler.NewSettingsHandler(tm)
+	settingsHandler.RegisterRoutes(r)
+
+	// 睡眠記録ハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering sleep record routes...")
+	sleepRecordHandler := handler.NewSleepRecordHandler(tm)
+	sleepRecordHandler.RegisterRoutes(r)
+
+	// 統計情報ハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering statistics routes...")
+	statisticsHandler := handler.NewStatisticsHandler(tm)
+	statisticsHandler.RegisterRoutes(r)
+
+	// 利用規約ハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering terms routes...")
+	termsHandler := handler.NewTermsHandler(tm)
+	termsHandler.RegisterRoutes(r)
+
 	// サーバーの設定
 	logger.Printf("[Initialize] Setting up server...")
 	server := &http.Server{

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>アカウント削除の確認 | SuiminNisshi-Go</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/static/adminlte/plugins/fontawesome-free/css/all.min.css">
+    <!-- icheck bootstrap -->
+    <link rel="stylesheet" href="/static/adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/static/adminlte/css/adminlte.min.css">
+</head>
+
+<body class="hold-transition login-page">
+    <div class="login-box" style="width: 460px;">
+        <div class="card card-outline card-danger">
+            <div class="card-header text-center">
+                <a href="/" class="h1"><b>Suimin</b>Nisshi</a>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 64px;"></i>
+                </div>
+
+                <h4 class="text-center text-danger mb-4">アカウント削除の確認</h4>
+
+                {{if .Flash}}
+                <div class="alert alert-{{.Flash.Type}}">
+                    {{.Flash.Message}}
+                </div>
+                {{end}}
+
+                <div class="alert alert-warning">
+                    <h5><i class="icon fas fa-exclamation-triangle"></i> 警告</h5>
+                    この操作は取り消すことができません。以下のデータがすべて削除されます：
+                    <ul class="mt-2 mb-0">
+                        <li>すべての睡眠記録</li>
+                        <li>統計データ</li>
+                        <li>個人設定</li>
+                        <li>アカウント情報</li>
+                    </ul>
+                </div>
+
+                <form action="/settings/account/delete" method="post" id="delete-account-form">
+                    <div class="form-group">
+                        <label for="current-password">確認のため、現在のパスワードを入力してください</label>
+                        <div class="input-group mb-3">
+                            <input type="password" class="form-control" name="password" id="current-password"
+                                placeholder="現在のパスワード" required>
+                            <div class="input-group-append">
+                                <div class="input-group-text">
+                                    <span class="fas fa-lock"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="icheck-danger">
+                            <input type="checkbox" id="confirm-delete" name="confirm_delete" required>
+                            <label for="confirm-delete">
+                                上記の内容を理解し、アカウントを完全に削除することに同意します
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <a href="/settings" class="btn btn-secondary btn-block">
+                                キャンセル
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <button type="submit" class="btn btn-danger btn-block" id="delete-button">
+                                アカウントを削除
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="/static/adminlte/plugins/jquery/jquery.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="/static/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="/static/adminlte/js/adminlte.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('delete-account-form');
+            const confirmCheckbox = document.getElementById('confirm-delete');
+            const deleteButton = document.getElementById('delete-button');
+
+            // パスワードが入力され、確認チェックボックスがチェックされているかを確認
+            function validateForm() {
+                const password = document.getElementById('current-password').value;
+                return password.length > 0 && confirmCheckbox.checked;
+            }
+
+            // 最終確認のダイアログを表示
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                if (!validateForm()) {
+                    alert('パスワードを入力し、確認チェックボックスにチェックを入れてください。');
+                    return;
+                }
+
+                if (confirm('本当にアカウントを削除してもよろしいですか？\nこの操作は取り消すことができません。')) {
+                    form.submit();
+                }
+            });
+
+            // フォームの状態が変更されたときにボタンの状態を更新
+            form.addEventListener('change', function () {
+                deleteButton.disabled = !validateForm();
+            });
+
+            // 初期状態ではボタンを無効化
+            deleteButton.disabled = true;
+        });
+    </script>
+</body>
+
+</html>
