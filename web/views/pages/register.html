@@ -50,9 +50,9 @@
                         </div>
                     </div>
                     <div class="input-group mb-3">
-                        <input type="password" class="form-control" placeholder="パスワード" name="password" required
-                            pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
-                            title="パスワードは8文字以上で、少なくとも1つの英字と数字を含める必要があります">
+                        <input type="password" class="form-control" placeholder="パスワード" name="password"
+                            required pattern="^(?!.*\s)(?!.*[^\x00-\x7F])[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]{8,}$"
+                            title="パスワードは8文字以上で、全角文字とスペースは禁止です">
                         <div class="input-group-append">
                             <div class="input-group-text">
                                 <span class="fas fa-lock"></span>
@@ -89,8 +89,8 @@
                     <p class="mb-0">パスワードの要件:</p>
                     <ul class="text-muted pl-4" style="font-size: 0.9em;">
                         <li>8文字以上</li>
-                        <li>英字を含む</li>
-                        <li>数字を含む</li>
+                        <li>スペースは禁止</li>
+                        <li>全角文字は禁止</li>
                     </ul>
                 </div>
 

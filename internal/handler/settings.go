@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/223n-tech/SuiminNisshi-Go/internal/models"
@@ -118,10 +119,54 @@ func (h *SettingsHandler) UpdatePassword(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	currentPassword := r.FormValue("current_password")
+	newPassword := r.FormValue("new_password")
+	confirmPassword := r.FormValue("confirm_password")
+
+	// パスワードが変更されている？
+	if currentPassword == newPassword {
+		data := &TemplateData{
+			Title:      "設定",
+			ActiveMenu: "settings",
+			Flash: &Flash{
+				Type:    "danger",
+				Message: "新しいパスワードが古いパスワードと同じです",
+			},
+		}
+		h.templates.Render(w, "reset-password.html", data)
+		return
+	}
+
+	// パスワードのバリデーション
+	if newPassword != confirmPassword {
+		data := &TemplateData{
+			Title:      "設定",
+			ActiveMenu: "settings",
+			Flash: &Flash{
+				Type:    "danger",
+				Message: "新しいパスワードが一致しません",
+			},
+		}
+		h.templates.Render(w, "reset-password.html", data)
+		return
+	}
+
+	// パスワードの条件が満たされているかどうか
+	passwordPattern := `^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]{8,}$`
+	passwordPatternRegex := regexp.MustCompile(passwordPattern)
+	if !passwordPatternRegex.MatchString(newPassword) {
+		data := &TemplateData{
+			Title: "新しいパスワードの設定",
+			Flash: &Flash{
+				Type:    "danger",
+				Message: "パスワードは半角英数字と記号のみ使用できます。",
+			},
+		}
+		h.templates.Render(w, "reset-password.html", data)
+		return
+	}
+
 	// TODO: パスワード更新の実装
-	// currentPassword := r.FormValue("current_password")
-	// newPassword := r.FormValue("new_password")
-	// confirmPassword := r.FormValue("confirm_password")
 
 	data := &TemplateData{
 		Title:      "設定",
@@ -147,10 +192,10 @@ func (h *SettingsHandler) UpdateNotifications(w http.ResponseWriter, r *http.Req
 	}
 
 	// TODO: 通知設定の更新の実装
-	// emailEnabled := r.FormValue("email_notification") == "on"
-	// bedtimeReminder := r.FormValue("bedtime_reminder") == "on"
-	// reminderTime := r.FormValue("reminder_time")
-	// weeklyReport := r.FormValue("weekly_report") == "on"
+	emailEnabled := r.FormValue("email_notification") == "on"
+	bedtimeReminder := r.FormValue("bedtime_reminder") == "on"
+	reminderTime := r.FormValue("reminder_time")
+	weeklyReport := r.FormValue("weekly_report") == "on"
 
 	data := &TemplateData{
 		Title:      "設定",
@@ -189,9 +234,10 @@ func (h *SettingsHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	password := r.FormValue("password")
+	confirmDelete := r.FormValue("confirm_delete") == "on"
+
 	// TODO: アカウント削除の実装
-	// password := r.FormValue("password")
-	// confirmDelete := r.FormValue("confirm_delete") == "on"
 
 	// セッションをクリアしてログインページにリダイレクト
 	http.Redirect(w, r, "/login", http.StatusSeeOther)

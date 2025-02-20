@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -93,13 +94,31 @@ func (h *PasswordResetHandler) HandleResetPassword(w http.ResponseWriter, r *htt
 	password := r.FormValue("password")
 	passwordConfirm := r.FormValue("password_confirmation")
 
-	// バリデーション
+	// パスワードが一致しているかどうか
 	if password != passwordConfirm {
 		data := &TemplateData{
 			Title: "新しいパスワードの設定",
 			Flash: &Flash{
 				Type:    "danger",
 				Message: "パスワードが一致しません。",
+			},
+			Data: map[string]interface{}{
+				"Token": token,
+			},
+		}
+		h.templates.Render(w, "reset-password.html", data)
+		return
+	}
+
+	// パスワードの条件が満たされているかどうか
+	passwordPattern := `^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]{8,}$`
+	passwordPatternRegex := regexp.MustCompile(passwordPattern)
+	if !passwordPatternRegex.MatchString(password) {
+		data := &TemplateData{
+			Title: "新しいパスワードの設定",
+			Flash: &Flash{
+				Type:    "danger",
+				Message: "パスワードは半角英数字と記号のみ使用できます。",
 			},
 			Data: map[string]interface{}{
 				"Token": token,

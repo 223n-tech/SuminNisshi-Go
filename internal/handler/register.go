@@ -109,6 +109,12 @@ func (h *RegisterHandler) validateRegisterData(data *RegisterData) error {
 		return fmt.Errorf("パスワードは8文字以上である必要があります")
 	}
 
+	passwordPattern := `^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]{8,}$`
+	passwordPatternRegex := regexp.MustCompile(passwordPattern)
+	if !passwordPatternRegex.MatchString(data.Password) {
+		return fmt.Errorf("パスワードは半角英数字と記号のみ使用できます")
+	}
+
 	if data.Password != data.PasswordConfirmation {
 		return fmt.Errorf("パスワードが一致しません")
 	}
