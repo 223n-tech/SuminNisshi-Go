@@ -46,7 +46,46 @@ go run cmd/suiminnisshi/main.go
 bash /usr/local/bin/setup-adminlte.sh
 ```
 
+## devcontainer環境
+
+### APP
+
+* image: [debian:bookworm-slim](https://hub.docker.com/_/debian)
+* OS: [Debian bookworm](https://www.debian.org/releases/bookworm/)
+* 開発言語: [Go (Ver.1.22.1)](https://tip.golang.org/doc/devel/release)
+* 環境変数管理: [direnv](https://github.com/direnv/direnv)
+* テンプレート: [AdminLTE](https://adminlte.io/)
+
+### DB
+
+* image: [mariadb:latest](https://hub.docker.com/_/mariadb)
+* DB: [MariaDB](https://mariadb.org/)
+* 設定
+  * DB_HOST = db
+  * USER_DB = suiminnisshi
+  * DB_PASSWORD = suiminnisshi_password
+  * DB_NAME = suiminnisshi
+
+### ポート転送
+
+* 8080: アプリケーションポート
+* 3306: MariaDBポート
+
 ## 開発メモ
+
+### .envrcファイルについて
+
+* `.envrc`ファイルが存在しない場合、devcontainerビルド時にテンプレートファイルから自動生成されます。
+  * テンプレートファイルは、 `.devcontainer/.envrc.template` です。
+* すでに`.envrc`ファイルが存在する場合、自動生成されません。
+
+### ターミナルを起動するとdirenvのエラーが表示される
+
+`.envrc`ファイルの読み込みを有効にしてください。
+
+```bash
+direnv allow
+```
 
 ### 新しくページを追加したい
 
@@ -63,9 +102,12 @@ bash /usr/local/bin/setup-adminlte.sh
     * 必要なCSSファイルをstyleブロックで追加します。
     * 必要なJavaScriptファイルをscriptブロックで追加します。
 
-4. main.goにハンドラーの初期化と登録
+4. main.goにハンドラーの初期化と登録（必要な場合にのみ実施）
+    * 必要な場合には、main.goにハンドラーを記載します。
+    * 自動読み込みで良い場合には、不要です。
 
     ```go
+      // ex. 設定例
       // 設定ハンドラーの初期化と登録
       settingsHandler := handler.NewSettingsHandler(tm)
       settingsHandler.RegisterRoutes(router)
