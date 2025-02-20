@@ -1,0 +1,382 @@
+{{define "content-header"}}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{{if .Data.Record}}睡眠記録の編集{{else}}新規睡眠記録{{end}}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/">ホーム</a></li>
+                    <li class="breadcrumb-item"><a href="/sleep-records">睡眠記録一覧</a></li>
+                    <li class="breadcrumb-item active">{{if .Data.Record}}編集{{else}}新規作成{{end}}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "content"}}
+<form id="sleep-record-form" method="POST"
+    action="{{if .Data.Record}}/sleep-records/{{.Data.Record.ID}}{{else}}/sleep-records{{end}}">
+    {{if .Data.Record}}<input type="hidden" name="_method" value="PUT">{{end}}
+
+    <div class="row">
+        <!-- 基本情報 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">基本情報</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="date">記録日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="date" name="date"
+                            value="{{if .Data.Record}}{{.Data.Record.Date.Format " 2006-01-02"}}{{end}}" required
+                            max="{{now.Format " 2006-01-02"}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bed-time">就寝時刻 <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="bed-time" name="bed_time"
+                            value="{{if .Data.Record}}{{.Data.Record.BedTime}}{{end}}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wake-time">起床時刻 <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="wake-time" name="wake_time"
+                            value="{{if .Data.Record}}{{.Data.Record.WakeTime}}{{end}}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>睡眠時間</label>
+                        <input type="text" class="form-control" id="duration" readonly>
+                        <small class="form-text text-muted">就寝時刻と起床時刻から自動計算されます</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 睡眠の質 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">睡眠の質</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>寝つきの良さ</label>
+                        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="fall_asleep_rating" value="1"> 悪い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="fall_asleep_rating" value="2"> やや悪い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="fall_asleep_rating" value="3"> 普通
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="fall_asleep_rating" value="4"> 良い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="fall_asleep_rating" value="5"> とても良い
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>睡眠の深さ</label>
+                        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="sleep_quality_rating" value="1"> 浅い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="sleep_quality_rating" value="2"> やや浅い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="sleep_quality_rating" value="3"> 普通
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="sleep_quality_rating" value="4"> 深い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="sleep_quality_rating" value="5"> とても深い
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>目覚めの気分</label>
+                        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="wake_feeling_rating" value="1"> 悪い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="wake_feeling_rating" value="2"> やや悪い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="wake_feeling_rating" value="3"> 普通
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="wake_feeling_rating" value="4"> 良い
+                            </label>
+                            <label class="btn btn-outline-primary">
+                                <input type="radio" name="wake_feeling_rating" value="5"> とても良い
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wakeup-count">夜中の目覚め回数</label>
+                        <input type="number" class="form-control" id="wakeup-count" name="wakeup_count" min="0" max="10"
+                            value="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 環境データ -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">睡眠環境</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="room-temp">室温 (°C)</label>
+                        <input type="number" class="form-control" id="room-temp" name="room_temp" min="0" max="40"
+                            step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="humidity">湿度 (%)</label>
+                        <input type="number" class="form-control" id="humidity" name="humidity" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>明るさ</label>
+                        <select class="form-control" name="brightness">
+                            <option value="">選択してください</option>
+                            <option value="very_dark">とても暗い</option>
+                            <option value="dark">暗い</option>
+                            <option value="normal">普通</option>
+                            <option value="bright">明るい</option>
+                            <option value="very_bright">とても明るい</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>騒音レベル</label>
+                        <select class="form-control" name="noise_level">
+                            <option value="">選択してください</option>
+                            <option value="very_quiet">とても静か</option>
+                            <option value="quiet">静か</option>
+                            <option value="normal">普通</option>
+                            <option value="noisy">うるさい</option>
+                            <option value="very_noisy">とてもうるさい</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 生活習慣データ -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">生活習慣データ</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="exercise">運動量（歩数）</label>
+                        <input type="number" class="form-control" id="exercise" name="exercise" min="0" max="100000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="caffeine-time">最後のカフェイン摂取時刻</label>
+                        <input type="time" class="form-control" id="caffeine-time" name="caffeine_time">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="screen-time">就寝前のスマホ・PC使用時間（分）</label>
+                        <input type="number" class="form-control" id="screen-time" name="screen_time" min="0"
+                            max="1440">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preparation-time">寝室の準備時刻</label>
+                        <input type="time" class="form-control" id="preparation-time" name="preparation_time">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メモ -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">メモ</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <textarea class="form-control" id="notes" name="notes" rows="3"
+                            placeholder="睡眠に関する気づきや特記事項があれば記入してください">{{if .Data.Record}}{{.Data.Record.Notes}}{{end}}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 送信ボタン -->
+    <div class="row">
+        <div class="col-12">
+            <div class="float-right mb-3">
+                <a href="/sleep-records" class="btn btn-secondary">キャンセル</a>
+                <button type="submit" class="btn btn-primary ml-2">保存</button>
+            </div>
+        </div>
+    </div>
+</form>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 睡眠時間の自動計算
+        function calculateDuration() {
+            const bedTime = document.getElementById('bed-time').value;
+            const wakeTime = document.getElementById('wake-time').value;
+
+            if (bedTime && wakeTime) {
+                const [bedHours, bedMinutes] = bedTime.split(':').map(Number);
+                const [wakeHours, wakeMinutes] = wakeTime.split(':').map(Number);
+
+                let duration = (wakeHours * 60 + wakeMinutes) - (bedHours * 60 + bedMinutes);
+                if (duration < 0) {
+                    duration += 24 * 60; // 日付をまたぐ場合
+                }
+
+                const hours = Math.floor(duration / 60);
+                const minutes = duration % 60;
+                document.getElementById('duration').value = `${hours}時間${minutes}分`;
+            }
+        }
+
+        // 既存データの評価値を選択状態にする
+        function setRatingValues() {
+            const ratings = {
+                'fall_asleep_rating': '{{if .Data.Record}}{{.Data.Record.FallAsleepRating}}{{end}}',
+                'sleep_quality_rating': '{{if .Data.Record}}{{.Data.Record.SleepQualityRating}}{{end}}',
+                'wake_feeling_rating': '{{if .Data.Record}}{{.Data.Record.WakeFeelingRating}}{{end}}'
+            };
+
+            for (const [name, value] of Object.entries(ratings)) {
+                if (value) {
+                    const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                        radio.closest('.btn').classList.add('active');
+                    }
+                }
+            }
+        }
+
+        // 環境データと生活習慣データのセレクトボックスを設定
+        function setSelectValues() {
+            const selects = {
+                'brightness': '{{if .Data.Record}}{{.Data.Record.Brightness}}{{end}}',
+                'noise_level': '{{if .Data.Record}}{{.Data.Record.NoiseLevel}}{{end}}'
+            };
+
+            for (const [name, value] of Object.entries(selects)) {
+                if (value) {
+                    const select = document.querySelector(`select[name="${name}"]`);
+                    if (select) {
+                        select.value = value;
+                    }
+                }
+            }
+        }
+
+        // フォームのバリデーション
+        function validateForm(e) {
+            const bedTime = document.getElementById('bed-time').value;
+            const wakeTime = document.getElementById('wake-time').value;
+
+            if (!bedTime || !wakeTime) {
+                e.preventDefault();
+                alert('就寝時刻と起床時刻は必須項目です。');
+                return false;
+            }
+
+            const [bedHours, bedMinutes] = bedTime.split(':').map(Number);
+            const [wakeHours, wakeMinutes] = wakeTime.split(':').map(Number);
+            let duration = (wakeHours * 60 + wakeMinutes) - (bedHours * 60 + bedMinutes);
+            if (duration < 0) {
+                duration += 24 * 60;
+            }
+
+            if (duration > 24 * 60) {
+                e.preventDefault();
+                alert('睡眠時間が24時間を超えています。');
+                return false;
+            }
+
+            return true;
+        }
+
+        // 数値入力フィールドの制限を設定
+        function setupNumericInputs() {
+            const numericInputs = {
+                'room-temp': { min: 0, max: 40, step: 0.1 },
+                'humidity': { min: 0, max: 100, step: 1 },
+                'exercise': { min: 0, max: 100000, step: 1 },
+                'screen-time': { min: 0, max: 1440, step: 1 },
+                'wakeup-count': { min: 0, max: 10, step: 1 }
+            };
+
+            for (const [id, constraints] of Object.entries(numericInputs)) {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', function () {
+                        let value = parseFloat(this.value);
+                        if (value < constraints.min) this.value = constraints.min;
+                        if (value > constraints.max) this.value = constraints.max;
+                    });
+                }
+            }
+        }
+
+        // イベントリスナーの設定
+        document.getElementById('bed-time').addEventListener('change', calculateDuration);
+        document.getElementById('wake-time').addEventListener('change', calculateDuration);
+        document.getElementById('sleep-record-form').addEventListener('submit', validateForm);
+
+        // 初期化処理
+        setRatingValues();
+        setSelectValues();
+        setupNumericInputs();
+        calculateDuration(); // 編集時に初期値を表示
+
+        // フォーム変更の監視
+        let formChanged = false;
+        document.getElementById('sleep-record-form').addEventListener('change', function () {
+            formChanged = true;
+        });
+
+        // ページ離脱時の警告
+        window.addEventListener('beforeunload', function (e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    });
+</script>
+{{end}}

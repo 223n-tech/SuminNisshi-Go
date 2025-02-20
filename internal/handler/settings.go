@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // SettingsHandler 設定画面のハンドラー
@@ -17,13 +19,13 @@ func NewSettingsHandler(templates *TemplateManager) *SettingsHandler {
 }
 
 // RegisterRoutes ルートの登録
-func (h *SettingsHandler) RegisterRoutes(r *RouterWrapper) {
+func (h *SettingsHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/settings", h.Settings)
 	r.Post("/settings/profile", h.UpdateProfile)
 	r.Post("/settings/password", h.UpdatePassword)
 	r.Post("/settings/notifications", h.UpdateNotifications)
-	r.Post("/settings/export/csv", h.ExportCSV)
-	r.Post("/settings/export/json", h.ExportJSON)
+	r.Get("/settings/export/csv", h.ExportCSV)
+	r.Get("/settings/export/json", h.ExportJSON)
 	r.Post("/settings/account/delete", h.DeleteAccount)
 }
 
@@ -32,10 +34,6 @@ func (h *SettingsHandler) Settings(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "設定",
 		ActiveMenu: "settings",
-		User: &User{
-			Name:  "テストユーザー",
-			Email: "test@example.com",
-		},
 	}
 
 	err := h.templates.Render(w, "settings.html", data)
@@ -45,19 +43,19 @@ func (h *SettingsHandler) Settings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UpdateProfile プロフィール更新
+// UpdateProfile プロフィール設定の更新
 func (h *SettingsHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	// TODO: プロフィール更新の実装
 	http.Error(w, "Not implemented", http.StatusNotImplemented)
 }
 
-// UpdatePassword パスワード更新
+// UpdatePassword パスワード設定の更新
 func (h *SettingsHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	// TODO: パスワード更新の実装
 	http.Error(w, "Not implemented", http.StatusNotImplemented)
 }
 
-// UpdateNotifications 通知設定更新
+// UpdateNotifications 通知設定の更新
 func (h *SettingsHandler) UpdateNotifications(w http.ResponseWriter, r *http.Request) {
 	// TODO: 通知設定更新の実装
 	http.Error(w, "Not implemented", http.StatusNotImplemented)

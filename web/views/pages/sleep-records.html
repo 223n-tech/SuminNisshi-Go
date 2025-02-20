@@ -1,0 +1,227 @@
+{{define "content-header"}}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">睡眠記録一覧</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/">ホーム</a></li>
+                    <li class="breadcrumb-item active">睡眠記録一覧</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "content"}}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">睡眠記録の管理</h3>
+                <div class="card-tools">
+                    <a href="/sleep-records/new" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> 新規記録
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- フィルター -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>期間:</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="far fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control float-right" id="date-range">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>睡眠時間:</label>
+                            <select class="form-control" id="duration-filter">
+                                <option value="">すべて</option>
+                                <option value="short">6時間未満</option>
+                                <option value="normal">6-8時間</option>
+                                <option value="long">8時間以上</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>睡眠スコア:</label>
+                            <select class="form-control" id="score-filter">
+                                <option value="">すべて</option>
+                                <option value="excellent">90点以上</option>
+                                <option value="good">70-89点</option>
+                                <option value="fair">50-69点</option>
+                                <option value="poor">50点未満</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>並び替え:</label>
+                            <select class="form-control" id="sort-order">
+                                <option value="date-desc">日付（新しい順）</option>
+                                <option value="date-asc">日付（古い順）</option>
+                                <option value="duration-desc">睡眠時間（長い順）</option>
+                                <option value="duration-asc">睡眠時間（短い順）</option>
+                                <option value="score-desc">スコア（高い順）</option>
+                                <option value="score-asc">スコア（低い順）</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- データテーブル -->
+                <table id="sleep-records" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>日付</th>
+                            <th>就寝時刻</th>
+                            <th>起床時刻</th>
+                            <th>睡眠時間</th>
+                            <th>睡眠スコア</th>
+                            <th>品質</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Data.Records}}
+                        <tr>
+                            <td>{{.Date}}</td>
+                            <td>{{.BedTime}}</td>
+                            <td>{{.WakeTime}}</td>
+                            <td>{{.Duration}}時間</td>
+                            <td>
+                                <div class="progress progress-xs">
+                                    <div class="progress-bar {{.ScoreColorClass}}" style="width: {{.Score}}%"></div>
+                                </div>
+                                <span class="badge {{.ScoreColorClass}}">{{.Score}}点</span>
+                            </td>
+                            <td>{{.Quality}}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/sleep-records/{{.ID}}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="/sleep-records/{{.ID}}/edit" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm delete-record" data-id="{{.ID}}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="delete-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">記録の削除</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>この睡眠記録を削除してもよろしいですか？</p>
+                <p class="text-danger"><small>※この操作は取り消せません。</small></p>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-default" data-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "styles"}}
+<!-- DataTables -->
+<link rel="stylesheet" href="/static/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="/static/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+<!-- Date Range Picker -->
+<link rel="stylesheet" href="/static/adminlte/plugins/daterangepicker/daterangepicker.css">
+{{end}}
+
+{{define "scripts"}}
+<!-- DataTables -->
+<script src="/static/adminlte/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/static/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="/static/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<!-- Moment.js -->
+<script src="/static/adminlte/plugins/moment/moment.min.js"></script>
+<!-- Date Range Picker -->
+<script src="/static/adminlte/plugins/daterangepicker/daterangepicker.js"></script>
+<script>
+    $(function () {
+        // データテーブルの初期化
+        $('#sleep-records').DataTable({
+            "responsive": true,
+            "autoWidth": false,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Japanese.json"
+            },
+            "order": [[0, "desc"]]
+        });
+
+        // 日付範囲選択の初期化
+        $('#date-range').daterangepicker({
+            locale: {
+                format: 'YYYY/MM/DD',
+                applyLabel: '適用',
+                cancelLabel: 'キャンセル',
+                customRangeLabel: 'カスタム期間'
+            }
+        });
+
+        // 削除処理
+        let recordToDelete = null;
+
+        $('.delete-record').click(function () {
+            recordToDelete = $(this).data('id');
+            $('#delete-modal').modal('show');
+        });
+
+        $('#confirm-delete').click(function () {
+            if (recordToDelete) {
+                // TODO: 削除APIの呼び出し
+                $.ajax({
+                    url: '/api/sleep-records/' + recordToDelete,
+                    method: 'DELETE',
+                    success: function () {
+                        location.reload();
+                    },
+                    error: function () {
+                        alert('削除に失敗しました。');
+                    }
+                });
+            }
+            $('#delete-modal').modal('hide');
+        });
+
+        // フィルター適用
+        $('#duration-filter, #score-filter, #sort-order').change(function () {
+            // TODO: フィルター適用の実装
+        });
+    });
+</script>
+{{end}}

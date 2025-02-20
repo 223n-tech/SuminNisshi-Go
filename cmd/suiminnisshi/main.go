@@ -24,36 +24,44 @@ import (
 func main() {
 	// ロガーの初期化
 	logger := log.New(os.Stdout, "[SuiminNisshi] ", log.LstdFlags|log.Lshortfile)
+	logger.Printf("[Initialize] SuiminNisshi Startup...")
 
 	// 設定の読み込み
+	logger.Printf("[Initialize] Loading config...")
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Fatalf("Failed to load config: %v", err)
+		logger.Fatalf("[NG] Failed to load config: %v", err)
 	}
 
 	// データベース接続の初期化
+	logger.Printf("[Initialize] Connecting to database...")
 	db, err := repository.NewDB(cfg.Database)
 	if err != nil {
-		logger.Fatalf("Failed to connect to database: %v", err)
+		logger.Fatalf("[NG] Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	// テンプレートマネージャーの初期化
-	tm := handler.NewTemplateManager("web/template", nil)
+	logger.Printf("[Initialize] Loading templates...")
+	tm := handler.NewTemplateManager("web/views", nil)
 	if err := tm.LoadTemplates(); err != nil {
-		logger.Fatalf("Failed to load templates: %v", err)
+		logger.Fatalf("[NG] Failed to load templates: %v", err)
 	}
 
 	// リポジトリの初期化
+	logger.Printf("[Initialize] Initializing repository...")
 	repo := repository.NewRepository(db)
 
 	// サービスの初期化
+	logger.Printf("[Initialize] Initializing service...")
 	svc := service.NewService(repo)
 
 	// ルーターの設定
+	logger.Printf("[Initialize] Setting up router...")
 	r := chi.NewRouter()
 
 	// ミドルウェアの設定
+	logger.Printf("[Initialize] Setting up middleware...")
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RequestID)
@@ -68,52 +76,31 @@ func main() {
 	}))
 
 	// カスタムミドルウェアの設定
+	logger.Printf("[Initialize] Setting up custom middleware...")
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.SecurityHeaders)
 
 	// 静的ファイルの提供
+	logger.Printf("[Initialize] Setting up static file server...")
 	fileServer := http.FileServer(http.Dir("web/static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 
 	// ルートの登録
+	logger.Printf("[Initialize] Registering routes...")
 	router := handler.NewRouter(r)
 
 	// サービスをハンドラーに渡す
+	logger.Printf("[Initialize] Passing service to handlers...")
 	authHandler := handler.NewAuthHandler(tm)
 	authHandler.RegisterRoutes(router)
 
 	// ダッシュボードハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering dashboard routes...")
 	dashboardHandler := handler.NewDashboardHandler(tm, svc)
 	dashboardHandler.RegisterRoutes(router)
 
-	// プロフィールハンドラーの初期化と登録
-	profileHandler := handler.NewProfileHandler(tm)
-	profileHandler.RegisterRoutes(router)
-
-	// 設定ハンドラーの初期化と登録
-	settingsHandler := handler.NewSettingsHandler(tm)
-	settingsHandler.RegisterRoutes(router)
-
-	// エラーハンドラーの初期化
-	errorHandler, err := handler.NewErrorHandler()
-	if err != nil {
-		logger.Fatalf("Failed to initialize error handler: %v", err)
-	}
-	// 404ハンドラーの設定
-	r.NotFound(errorHandler.Handle404)
-	// // ミドルウェアでパニックをキャッチして500エラーを表示
-	// r.Use(func(next http.Handler) http.Handler {
-	// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 		defer func() {
-	// 			if err := recover(); err != nil {
-	// 				errorHandler.Handle500(w, r, fmt.Errorf("%v", err))
-	// 			}
-	// 		}()
-	// 		next.ServeHTTP(w, r)
-	// 	})
-	// })
-
 	// サーバーの設定
+	logger.Printf("[Initialize] Setting up server...")
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Server.Port),
 		Handler:      r,
@@ -124,9 +111,9 @@ func main() {
 
 	// サーバーの起動（ゴルーチンで実行）
 	go func() {
-		logger.Printf("Server is starting on port %d", cfg.Server.Port)
+		logger.Printf("[START] Server is starting on port %d", cfg.Server.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("Failed to start server: %v", err)
+			logger.Fatalf("[NG] Failed to start server: %v", err)
 		}
 	}()
 
@@ -135,7 +122,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Println("Server is shutting down...")
+	logger.Println("[STOP] Server is shutting down...")
 
 	// シャットダウンのコンテキスト
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -143,8 +130,8 @@ func main() {
 
 	// サーバーのシャットダウン
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatalf("Server forced to shutdown: %v", err)
+		logger.Fatalf("[STOP] Server forced to shutdown: %v", err)
 	}
 
-	logger.Println("Server stopped gracefully")
+	logger.Println("[STOP] Server stopped gracefully")
 }

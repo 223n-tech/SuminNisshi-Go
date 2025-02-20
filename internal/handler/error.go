@@ -26,11 +26,11 @@ func NewErrorHandler() (*ErrorHandler, error) {
 	}
 
 	for status, filename := range errorPages {
-		tmpl, err := template.ParseFiles(filepath.Join("web", "template", "errors", filename))
+		template, err := template.ParseFiles(filepath.Join("web", "template", "errors", filename))
 		if err != nil {
 			return nil, err
 		}
-		handler.templates[status] = tmpl
+		handler.templates[status] = template
 	}
 
 	return handler, nil
@@ -38,15 +38,15 @@ func NewErrorHandler() (*ErrorHandler, error) {
 
 // ServeHTTP エラーページを表示
 func (h *ErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, status int) {
-	tmpl, exists := h.templates[status]
+	template, exists := h.templates[status]
 	if !exists {
 		log.Printf("No template for status %d, falling back to 500", status)
-		tmpl = h.templates[http.StatusInternalServerError]
+		template = h.templates[http.StatusInternalServerError]
 		status = http.StatusInternalServerError
 	}
 
 	w.WriteHeader(status)
-	if err := tmpl.Execute(w, nil); err != nil {
+	if err := template.Execute(w, nil); err != nil {
 		log.Printf("Error executing template: %v", err)
 	}
 }

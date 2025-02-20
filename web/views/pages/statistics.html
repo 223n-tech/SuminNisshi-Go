@@ -1,0 +1,338 @@
+{{define "content-header"}}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">統計情報</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/">ホーム</a></li>
+                    <li class="breadcrumb-item active">統計情報</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "content"}}
+<!-- 期間選択 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">期間選択</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>表示期間:</label>
+                            <select class="form-control" id="period-select">
+                                <option value="week">過去1週間</option>
+                                <option value="month" selected>過去1ヶ月</option>
+                                <option value="3months">過去3ヶ月</option>
+                                <option value="6months">過去6ヶ月</option>
+                                <option value="year">過去1年</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label>カスタム期間:</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="far fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control float-right" id="date-range">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 睡眠時間の推移 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">睡眠時間の推移</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart">
+                    <canvas id="sleepChart"
+                        style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 睡眠スコアと就寝・起床時刻 -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">睡眠スコアの分布</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="scoreChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">就寝・起床時刻の傾向</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="timeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 週間・月間サマリー -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">曜日別の平均睡眠時間</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="weekdayChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">月間集計</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>値</th>
+                                <th>前月比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>平均睡眠時間</td>
+                                <td>7.2時間</td>
+                                <td><span class="text-success">↑ 0.3時間</span></td>
+                            </tr>
+                            <tr>
+                                <td>平均睡眠スコア</td>
+                                <td>85点</td>
+                                <td><span class="text-success">↑ 2点</span></td>
+                            </tr>
+                            <tr>
+                                <td>平均就寝時刻</td>
+                                <td>23:30</td>
+                                <td><span class="text-danger">↓ 30分遅く</span></td>
+                            </tr>
+                            <tr>
+                                <td>平均起床時刻</td>
+                                <td>6:45</td>
+                                <td><span class="text-muted">→ 変化なし</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "styles"}}
+<!-- Date Range Picker -->
+<link rel="stylesheet" href="/static/adminlte/plugins/daterangepicker/daterangepicker.css">
+{{end}}
+
+{{define "scripts"}}
+<!-- Chart.js -->
+<script src="/static/adminlte/plugins/chart.js/Chart.min.js"></script>
+<!-- Moment.js -->
+<script src="/static/adminlte/plugins/moment/moment.min.js"></script>
+<!-- Date Range Picker -->
+<script src="/static/adminlte/plugins/daterangepicker/daterangepicker.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 期間選択の初期化
+        $('#date-range').daterangepicker({
+            locale: {
+                format: 'YYYY/MM/DD',
+                applyLabel: '適用',
+                cancelLabel: 'キャンセル',
+                customRangeLabel: 'カスタム期間'
+            }
+        });
+
+        // 睡眠時間の推移グラフ
+        var sleepCtx = document.getElementById('sleepChart').getContext('2d');
+        new Chart(sleepCtx, {
+            type: 'line',
+            data: {
+                labels: ['2/13', '2/14', '2/15', '2/16', '2/17', '2/18', '2/19'],
+                datasets: [{
+                    label: '睡眠時間',
+                    data: [7.5, 6.8, 7.2, 8.0, 7.5, 6.5, 8.0],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 12
+                    }
+                }
+            }
+        });
+
+        // 睡眠スコアの分布グラフ
+        var scoreCtx = document.getElementById('scoreChart').getContext('2d');
+        new Chart(scoreCtx, {
+            type: 'bar',
+            data: {
+                labels: ['60未満', '60-69', '70-79', '80-89', '90-100'],
+                datasets: [{
+                    label: '回数',
+                    data: [2, 5, 8, 12, 3],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(255, 159, 64, 0.5)',
+                        'rgba(255, 205, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(54, 162, 235, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 159, 64)',
+                        'rgb(255, 205, 86)',
+                        'rgb(75, 192, 192)',
+                        'rgb(54, 162, 235)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // 就寝・起床時刻の傾向グラフ
+        var timeCtx = document.getElementById('timeChart').getContext('2d');
+        new Chart(timeCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: '就寝時刻',
+                    data: [
+                        { x: '2025-02-13', y: 23.5 },
+                        { x: '2025-02-14', y: 23.0 },
+                        { x: '2025-02-15', y: 23.2 },
+                        { x: '2025-02-16', y: 22.8 },
+                        { x: '2025-02-17', y: 23.3 }
+                    ],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                }, {
+                    label: '起床時刻',
+                    data: [
+                        { x: '2025-02-13', y: 6.5 },
+                        { x: '2025-02-14', y: 6.8 },
+                        { x: '2025-02-15', y: 6.3 },
+                        { x: '2025-02-16', y: 6.7 },
+                        { x: '2025-02-17', y: 6.5 }
+                    ],
+                    backgroundColor: 'rgba(255, 159, 64, 0.5)'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 24,
+                        ticks: {
+                            callback: function (value) {
+                                return value + ':00';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 曜日別の平均睡眠時間グラフ
+        var weekdayCtx = document.getElementById('weekdayChart').getContext('2d');
+        new Chart(weekdayCtx, {
+            type: 'radar',
+            data: {
+                labels: ['月', '火', '水', '木', '金', '土', '日'],
+                datasets: [{
+                    label: '平均睡眠時間',
+                    data: [7.2, 7.0, 6.8, 7.1, 7.5, 8.0, 7.8],
+                    fill: true,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    pointBackgroundColor: 'rgb(54, 162, 235)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(54, 162, 235)'
+                }]
+            },
+            options: {
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 10
+                    }
+                }
+            }
+        });
+    });
+</script>
+{{end}}
