@@ -9,8 +9,6 @@
       "extensions": [
         "golang.go",
         "editorconfig.editorconfig",
-        "streetsidesoftware.code-spell-checker",
-        "ms-azuretools.vscode-docker",
         "GitHub.copilot",
         "GitHub.copilot-chat",
         "eamodio.gitlens",
@@ -37,8 +35,8 @@
     }
   },
   "forwardPorts": [
-    8080,  // アプリケーションポート
-    3306   // MariaDBポート
+    8080, // アプリケーションポート
+    3306 // MariaDBポート
   ],
   "portsAttributes": {
     "8080": {
