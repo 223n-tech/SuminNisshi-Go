@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     direnv \
     sudo \
     unzip \
+    tree \
     && rm -rf /var/lib/apt/lists/*
 
 # sudoers設定

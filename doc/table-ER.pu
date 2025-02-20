@@ -1,0 +1,134 @@
+@startuml Sleep Diary ER Diagram
+
+' 日本語の設定
+skinparam {
+  defaultFontName "MS Gothic"
+  handwritten false
+  monochrome true
+}
+
+' Hide the circle marking
+hide circle
+
+' Avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity "users\nユーザー" as users {
+  *id: int(10) unsigned <<PK>> <<AUTO_INCREMENT>> [ユーザーID]
+  --
+  *email: varchar(255) <<UNIQUE>> [メールアドレス]
+  *display_name: varchar(100) [表示名]
+  *password_hash: varchar(255) [パスワード(ハッシュ)]
+  last_login_datetime: datetime [最終ログイン日時]
+  *created: datetime [作成日時]
+  *modified: datetime [更新日時]
+  deleted: datetime [削除日時]
+  ..
+  インデックス
+  --
+  + email_idx(email)
+  + users_email_UNIQUE(email)
+}
+
+entity "sleep_diaries\n睡眠日誌" as sleep_diaries {
+  *id: int(10) unsigned <<PK>> <<AUTO_INCREMENT>> [睡眠日誌ID]
+  --
+  *user_id: int(10) unsigned <<FK>> [ユーザーID]
+  *start_date: date [記録開始日]
+  *end_date: date [記録終了日]
+  *diary_name: varchar(100) [日誌名称]
+  note: text [備考]
+  *created: datetime [作成日時]
+  *modified: datetime [更新日時]
+  deleted: datetime [削除日時]
+  ..
+  インデックス
+  --
+  + user_id_idx(user_id)
+  + start_date_idx(start_date)
+  + fk_sleep_diaries_user_id(user_id)
+}
+
+entity "sleep_records\n睡眠記録" as sleep_records {
+  *id: int(10) unsigned <<PK>> <<AUTO_INCREMENT>> [睡眠記録ID]
+  --
+  *sleep_diary_id: int(10) unsigned <<FK>> [睡眠日誌ID]
+  *sleep_state_id: int(10) unsigned <<FK>> [睡眠状態ID]
+  *record_date: date [記録日]
+  *time_slot: time [時間枠(30分単位)]
+  *record_type: ENUM('STATE','EVENT','MEAL') [記録種別]
+  meal_type_id: int(10) unsigned <<FK>> [食事種別ID]
+  note: text [備考]
+  *created: datetime [作成日時]
+  *modified: datetime [更新日時]
+  deleted: datetime [削除日時]
+  ..
+  インデックス
+  --
+  + sleep_diary_id_idx(sleep_diary_id)
+  + sleep_state_id_idx(sleep_state_id)
+  + time_slot_idx(record_date, time_slot)
+  + fk_sleep_records_sleep_diary_id(sleep_diary_id)
+  + fk_sleep_records_sleep_state_id(sleep_state_id)
+  + fk_sleep_records_meal_type_id(meal_type_id)
+}
+
+entity "sleep_states\n睡眠状態" as sleep_states {
+  *id: int(10) unsigned <<PK>> <<AUTO_INCREMENT>> [睡眠状態ID]
+  --
+  *state_name: varchar(50) [状態名]
+  *state_code: varchar(20) <<UNIQUE>> [状態コード]
+  state_description: varchar(255) [状態の説明]
+  *display_symbol: varchar(10) [表示記号]
+  *display_order: int(10) unsigned = 0 [表示順]
+  *created: datetime [作成日時]
+  *modified: datetime [更新日時]
+  deleted: datetime [削除日時]
+  ..
+  インデックス
+  --
+  + sleep_states_state_code_UNIQUE(state_code)
+}
+
+entity "meal_types\n食事種別" as meal_types {
+  *id: int(10) unsigned <<PK>> <<AUTO_INCREMENT>> [食事種別ID]
+  --
+  *type_name: varchar(50) [種別名]
+  *type_code: varchar(20) <<UNIQUE>> [種別コード]
+  *display_symbol: varchar(10) [表示記号]
+  *display_order: int(10) unsigned = 0 [表示順]
+  *created: datetime [作成日時]
+  *modified: datetime [更新日時]
+  deleted: datetime [削除日時]
+  ..
+  インデックス
+  --
+  + meal_types_type_code_UNIQUE(type_code)
+}
+
+entity "users_sleep_preferences\nユーザー睡眠設定" as users_sleep_preferences {
+  *id: int(10) unsigned <<PK>> <<AUTO_INCREMENT>> [睡眠設定ID]
+  --
+  *user_id: int(10) unsigned <<FK>> [ユーザーID]
+  *preferred_bedtime: time [目標就寝時刻]
+  *preferred_wakeup_time: time [目標起床時刻]
+  *sleep_goal_hours: int(3) = 8 [目標睡眠時間]
+  *is_reminder_enabled: boolean = true [リマインダー設定有無]
+  *created: datetime [作成日時]
+  *modified: datetime [更新日時]
+  deleted: datetime [削除日時]
+  ..
+  インデックス
+  --
+  + user_id_idx(user_id)
+  + fk_users_sleep_preferences_user_id(user_id)
+}
+
+' リレーションシップ
+users ||--o{ sleep_diaries : "1人のユーザーは\n複数の睡眠日誌を持つ"
+sleep_diaries ||--|{ sleep_records : "1つの睡眠日誌は\n複数の睡眠記録を持つ"
+sleep_states ||--o{ sleep_records : "1つの睡眠状態は\n複数の睡眠記録で使用される"
+meal_types ||--o{ sleep_records : "1つの食事種別は\n複数の睡眠記録で使用される"
+users ||--o| users_sleep_preferences : "1人のユーザーは\n1つの睡眠設定を持つ"
+
+@enduml
