@@ -1,29 +1,38 @@
+// 利用規約画面のハンドラーを定義
 package handler
 
 import (
-    "net/http"
+	"net/http"
 
-    "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
 )
 
-// TermsHandler 利用規約画面のハンドラー
+/*
+    TermsHandler は利用規約画面のハンドラです。
+*/
 type TermsHandler struct {
     templates *TemplateManager
 }
 
-// NewTermsHandler 利用規約ハンドラーを作成
+/*
+    NewTermsHandler は TermsHandler を作成します。
+*/
 func NewTermsHandler(templates *TemplateManager) *TermsHandler {
     return &TermsHandler{
         templates: templates,
     }
 }
 
-// RegisterRoutes ルートの登録
+/*
+    RegisterRoutes はルーティングを登録します。
+*/
 func (h *TermsHandler) RegisterRoutes(r chi.Router) {
     r.Get("/terms", h.Terms)
 }
 
-// Terms 利用規約ページの表示
+/*
+    Terms 利用規約画面を表示
+*/
 func (h *TermsHandler) Terms(w http.ResponseWriter, r *http.Request) {
     data := &TemplateData{
         Title: "利用規約",

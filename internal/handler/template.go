@@ -1,3 +1,4 @@
+// テンプレートを管理するハンドラーです。
 package handler
 
 import (
@@ -15,7 +16,9 @@ import (
 	"github.com/223n-tech/SuiminNisshi-Go/internal/models"
 )
 
-// TemplateData テンプレートに渡すデータの構造体
+/*
+	TemplateData テンプレートデータ
+*/
 type TemplateData struct {
 	Title      string
 	ActiveMenu string
@@ -25,13 +28,17 @@ type TemplateData struct {
 	Meta       map[string]interface{}    // Metaフィールドを追加
 }
 
-// Flash フラッシュメッセージの構造体
+/*
+	Flash フラッシュメッセージ
+*/
 type Flash struct {
 	Type    string // success, error, warning, info
 	Message string
 }
 
-// TemplateManager はテンプレート管理を担当する構造体です
+/*
+	TemplateManager テンプレートマネージャ
+*/
 type TemplateManager struct {
 	templates map[string]*template.Template
 	mutex     sync.RWMutex
@@ -40,7 +47,9 @@ type TemplateManager struct {
 	embedFS   *embed.FS
 }
 
-// NewTemplateManager は新しいTemplateManagerインスタンスを作成します
+/*
+	NewTemplateManager は TemplateManager を作成します。
+*/
 func NewTemplateManager(basePath string, embedFS *embed.FS) *TemplateManager {
 	return &TemplateManager{
 		templates: make(map[string]*template.Template),
@@ -50,7 +59,9 @@ func NewTemplateManager(basePath string, embedFS *embed.FS) *TemplateManager {
 	}
 }
 
-// makeTemplateFuncMap はテンプレートで使用する関数マップを作成します
+/*
+	makeTemplateFuncMap はテンプレート関数のマップを作成します。
+*/
 func makeTemplateFuncMap() template.FuncMap {
 	return template.FuncMap{
 		"add": func(a, b int) int {
@@ -85,7 +96,9 @@ func makeTemplateFuncMap() template.FuncMap {
 	}
 }
 
-// LoadTemplates はテンプレートをロードします
+/*
+	LoadTemplates はテンプレートを読み込みます。
+*/
 func (tm *TemplateManager) LoadTemplates() error {
 	tm.mutex.Lock()
 	defer tm.mutex.Unlock()
@@ -166,7 +179,9 @@ func (tm *TemplateManager) LoadTemplates() error {
 	return nil
 }
 
-// GetTemplateNames は読み込まれたテンプレート名の一覧を返します
+/*
+	GetTemplateNames はテンプレート名のスライスを返します。
+*/
 func (tm *TemplateManager) GetTemplateNames(isLock bool) []string {
 	if (isLock) {
 		tm.mutex.RLock()
@@ -180,7 +195,9 @@ func (tm *TemplateManager) GetTemplateNames(isLock bool) []string {
 	return names
 }
 
-// Render はテンプレートをレンダリングします
+/*
+	Render はテンプレートをレンダリングします。
+*/
 func (tm *TemplateManager) Render(w http.ResponseWriter, name string, data *TemplateData) error {
 	tm.mutex.RLock()
 	template, exists := tm.templates[name]
@@ -208,12 +225,16 @@ func (tm *TemplateManager) Render(w http.ResponseWriter, name string, data *Temp
 	return template.ExecuteTemplate(w, "base.html", data)
 }
 
-// ReloadTemplates はテンプレートを再読み込みします
+/*
+	ReloadTemplates はテンプレートを再読み込みします。
+*/
 func (tm *TemplateManager) ReloadTemplates() error {
 	return tm.LoadTemplates()
 }
 
-// contains は文字列スライスに特定の文字列が含まれているかチェックします
+/*
+	contains はスライスに指定した要素が含まれているかどうかを返します。
+*/
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {

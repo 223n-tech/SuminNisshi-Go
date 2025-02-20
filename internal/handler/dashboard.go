@@ -1,3 +1,4 @@
+// ダッシュボード関連のハンドラー
 package handler
 
 import (
@@ -7,13 +8,17 @@ import (
 	"github.com/223n-tech/SuiminNisshi-Go/internal/service"
 )
 
-// DashboardHandler ダッシュボード関連のハンドラー
+/*
+	DashboardHandler ダッシュボード関連のハンドラ
+*/
 type DashboardHandler struct {
 	templates *TemplateManager
 	service   *service.Service
 }
 
-// NewDashboardHandler ダッシュボードハンドラーを作成
+/*
+	NewDashboardHandler は DashboardHandler を作成します。
+*/
 func NewDashboardHandler(templates *TemplateManager, svc *service.Service) *DashboardHandler {
 	return &DashboardHandler{
 		templates: templates,
@@ -21,12 +26,16 @@ func NewDashboardHandler(templates *TemplateManager, svc *service.Service) *Dash
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *DashboardHandler) RegisterRoutes(r *RouterWrapper) {
 	r.Get("/dashboard", h.Dashboard)
 }
 
-// Dashboard ダッシュボードページの表示
+/*
+	Dashboard ダッシュボードを表示
+*/
 func (h *DashboardHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "ダッシュボード",

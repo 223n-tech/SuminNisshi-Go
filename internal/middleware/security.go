@@ -1,3 +1,4 @@
+// This file contains the security middleware for the application.
 package middleware
 
 import (
@@ -6,7 +7,9 @@ import (
 	"time"
 )
 
-// SecurityHeaders adds security-related headers to the response
+/*
+	SecurityHeaders はセキュリティヘッダを追加します
+*/
 func SecurityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Security headers
@@ -21,7 +24,9 @@ func SecurityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// Timeout adds a timeout to the request context
+/*
+	Timeout はリクエストのタイムアウトを設定します
+*/
 func Timeout(timeout time.Duration) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

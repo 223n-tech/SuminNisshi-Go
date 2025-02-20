@@ -1,3 +1,4 @@
+// アカウント削除画面のハンドラーを定義
 package handler
 
 import (
@@ -6,25 +7,33 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// AccountDeletionHandler アカウント削除画面のハンドラー
+/*
+	AccountDeletionHandler アカウント削除画面のハンドラー
+*/
 type AccountDeletionHandler struct {
 	templates *TemplateManager
 }
 
-// NewAccountDeletionHandler アカウント削除ハンドラーを作成
+/*
+	NewAccountDeletionHandler アカウント削除画面のハンドラーを作成
+*/
 func NewAccountDeletionHandler(templates *TemplateManager) *AccountDeletionHandler {
 	return &AccountDeletionHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *AccountDeletionHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/settings/account/delete", h.ShowDeleteConfirmation)
 	r.Post("/settings/account/delete", h.DeleteAccount)
 }
 
-// ShowDeleteConfirmation アカウント削除確認ページの表示
+/*
+	ShowDeleteConfirmation アカウント削除画面を表示
+*/
 func (h *AccountDeletionHandler) ShowDeleteConfirmation(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "アカウント削除",
@@ -38,7 +47,9 @@ func (h *AccountDeletionHandler) ShowDeleteConfirmation(w http.ResponseWriter, r
 	}
 }
 
-// DeleteAccount アカウント削除の実行
+/*
+	DeleteAccount アカウント削除の処理
+*/
 func (h *AccountDeletionHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	// POSTデータの解析
 	if err := r.ParseForm(); err != nil {

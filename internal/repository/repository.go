@@ -1,3 +1,4 @@
+// デーカプリングのためのリポジトリ層の構造体とインターフェースを定義
 package repository
 
 import (
@@ -8,18 +9,24 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// RepositoryInterface はリポジトリの操作を定義するインターフェース
+/*
+	RepositoryInterface リポジトリのインターフェース
+*/
 type RepositoryInterface interface {
 	Close() error
 	// TODO: 他のリポジトリメソッドを追加
 }
 
-// Repository はデータアクセス層の構造体
+/*
+	Repository リポジトリの構造体
+*/
 type Repository struct {
 	db *sql.DB
 }
 
-// NewDB データベース接続を初期化
+/*
+	NewDB データベース接続を作成
+*/
 func NewDB(cfg config.DatabaseConfig) (*sql.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci",
 		cfg.User,
@@ -46,14 +53,18 @@ func NewDB(cfg config.DatabaseConfig) (*sql.DB, error) {
 	return db, nil
 }
 
-// NewRepository リポジトリインスタンスを作成
+/*
+	NewRepository リポジトリを作成
+*/
 func NewRepository(db *sql.DB) RepositoryInterface {
 	return &Repository{
 		db: db,
 	}
 }
 
-// Close データベース接続を閉じる
+/*
+	Close データベース接続をクローズ
+*/
 func (r *Repository) Close() error {
 	return r.db.Close()
 }

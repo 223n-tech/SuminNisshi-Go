@@ -1,3 +1,4 @@
+// エラーページのハンドラーを定義
 package handler
 
 import (
@@ -5,19 +6,25 @@ import (
 	"net/http"
 )
 
-// ErrorHandler エラーページのハンドラー
+/*
+	ErrorHandler エラーページのハンドラ
+*/
 type ErrorHandler struct {
 	templates *TemplateManager
 }
 
-// NewErrorHandlerWithTemplates エラーハンドラーを作成
+/*
+	NewErrorHandler は ErrorHandler を作成します。
+*/
 func NewErrorHandlerWithTemplates(templates *TemplateManager) *ErrorHandler {
 	return &ErrorHandler{
 		templates: templates,
 	}
 }
 
-// ServeHTTP エラーページを表示
+/*
+	TemplateData エラーページのテンプレートデータ
+*/
 func (h *ErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, status int) {
 	data := &TemplateData{
 		Title: http.StatusText(status),
@@ -42,23 +49,31 @@ func (h *ErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, status 
 	}
 }
 
-// Handle404 404エラーページを表示
+/*
+	Handle404 404エラーページを表示
+*/
 func (h *ErrorHandler) Handle404(w http.ResponseWriter, r *http.Request) {
 	h.ServeHTTP(w, r, http.StatusNotFound)
 }
 
-// Handle500 500エラーページを表示
+/*
+	Handle500 500エラーページを表示
+*/
 func (h *ErrorHandler) Handle500(w http.ResponseWriter, r *http.Request, err error) {
 	log.Printf("Internal Server Error: %v", err)
 	h.ServeHTTP(w, r, http.StatusInternalServerError)
 }
 
-// Handle403 403エラーページを表示
+/*
+	Handle403 403エラーページを表示
+*/
 func (h *ErrorHandler) Handle403(w http.ResponseWriter, r *http.Request) {
 	h.ServeHTTP(w, r, http.StatusForbidden)
 }
 
-// Handle405 405エラーページを表示
+/*
+	Handle405 405エラーページを表示
+*/
 func (h *ErrorHandler) Handle405(w http.ResponseWriter, r *http.Request) {
 	h.ServeHTTP(w, r, http.StatusMethodNotAllowed)
 }

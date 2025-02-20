@@ -79,6 +79,15 @@ bash /usr/local/bin/setup-adminlte.sh
 
 ## 開発メモ
 
+### godocについて
+
+godocコマンドで、ドキュメントページにアクセスすることが可能です。
+internalディレクトリ以下のモジュールは、対象外です。
+
+```bash
+godoc
+```
+
 ### .envrcファイルについて
 
 * `.envrc`ファイルが存在しない場合、devcontainerビルド時にテンプレートファイルから自動生成されます。

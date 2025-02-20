@@ -1,3 +1,4 @@
+// アプリケーション全体の設定を保持する構造体を定義する
 package config
 
 import (
@@ -5,20 +6,26 @@ import (
 	"strconv"
 )
 
-// Config アプリケーション全体の設定を保持する構造体
+/*
+	Config アプリケーション全体の設定を保持する構造体
+*/
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 }
 
-// ServerConfig サーバー関連の設定
+/*
+	ServerConfig サーバー関連の設定
+*/
 type ServerConfig struct {
 	Port    int
 	Host    string
 	BaseURL string
 }
 
-// DatabaseConfig データベース関連の設定
+/*
+	DatabaseConfig データベース関連の設定
+*/
 type DatabaseConfig struct {
 	Host     string
 	Port     int
@@ -27,7 +34,9 @@ type DatabaseConfig struct {
 	DBName   string
 }
 
-// Load 環境変数から設定を読み込む
+/*
+	Load 環境変数から設定を読み込む
+*/
 func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
@@ -47,7 +56,9 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// getEnvStr 環境変数から文字列を取得
+/*
+	getEnvStr 環境変数から文字列を取得
+*/
 func getEnvStr(key string, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -55,7 +66,9 @@ func getEnvStr(key string, defaultValue string) string {
 	return defaultValue
 }
 
-// getEnvInt 環境変数から数値を取得
+/*
+	getEnvInt 環境変数から整数を取得
+*/
 func getEnvInt(key string, defaultValue int) int {
 	if value, exists := os.LookupEnv(key); exists {
 		if intValue, err := strconv.Atoi(value); err == nil {

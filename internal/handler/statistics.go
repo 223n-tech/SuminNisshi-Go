@@ -1,3 +1,4 @@
+// 統計情報画面のハンドラーを定義
 package handler
 
 import (
@@ -8,12 +9,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// StatisticsHandler 統計情報画面のハンドラー
+/*
+	StatisticsHandler 統計情報関連のハンドラ
+*/
 type StatisticsHandler struct {
 	templates *TemplateManager
 }
 
-// StatisticsData 統計データの構造体
+/*
+	StatisticsData 統計データの構造体
+*/
 type StatisticsData struct {
 	StartDate       time.Time              `json:"startDate"`
 	EndDate         time.Time              `json:"endDate"`
@@ -23,7 +28,9 @@ type StatisticsData struct {
 	MonthlySummary  MonthlySummaryData     `json:"monthlySummary"`
 }
 
-// SleepTimeData 睡眠時間データ
+/*
+	SleepTimeData 睡眠時間データ
+*/
 type SleepTimeData struct {
 	Date      time.Time `json:"date"`
 	Duration  float64   `json:"duration"`    // 睡眠時間（時間）
@@ -32,20 +39,26 @@ type SleepTimeData struct {
 	Score     int       `json:"score"`       // 睡眠スコア
 }
 
-// ScoreDistribution スコア分布データ
+/*
+	ScoreDistribution スコア分布データ
+*/
 type ScoreDistribution struct {
 	Range string `json:"range"`  // スコア範囲（例: "60-69"）
 	Count int    `json:"count"`  // 該当する記録の数
 }
 
-// WeekdayAverageData 曜日別平均データ
+/*
+	WeekdayAverageData 曜日ごとの平均データ
+*/
 type WeekdayAverageData struct {
 	Weekday       string  `json:"weekday"`      // 曜日
 	AvgDuration   float64 `json:"avgDuration"`  // 平均睡眠時間
 	AvgScore      float64 `json:"avgScore"`     // 平均スコア
 }
 
-// MonthlySummaryData 月間サマリーデータ
+/*
+	MonthlySummaryData 月間サマリーデータ
+*/
 type MonthlySummaryData struct {
 	AvgDuration    float64 `json:"avgDuration"`     // 平均睡眠時間
 	AvgScore       float64 `json:"avgScore"`        // 平均スコア
@@ -55,20 +68,26 @@ type MonthlySummaryData struct {
 	ScoreChange    float64 `json:"scoreChange"`      // 前月比（スコア）
 }
 
-// NewStatisticsHandler 統計情報ハンドラーを作成
+/*
+	NewStatisticsHandler は StatisticsHandler を作成します。
+*/
 func NewStatisticsHandler(templates *TemplateManager) *StatisticsHandler {
 	return &StatisticsHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *StatisticsHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/statistics", h.Statistics)
 	r.Get("/api/statistics/data", h.GetStatisticsData)
 }
 
-// Statistics 統計情報ページの表示
+/*
+	Statistics 統計情報画面を表示
+*/
 func (h *StatisticsHandler) Statistics(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "統計情報",
@@ -82,7 +101,9 @@ func (h *StatisticsHandler) Statistics(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetStatisticsData 統計データのJSONを返す
+/*
+	GetStatisticsData 統計データを取得
+*/
 func (h *StatisticsHandler) GetStatisticsData(w http.ResponseWriter, r *http.Request) {
 	// クエリパラメータから期間を取得
 	// TODO: 期間に基づくデータ取得の実装

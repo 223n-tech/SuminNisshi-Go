@@ -1,3 +1,4 @@
+// プライバシーポリシーページのハンドラー
 package handler
 
 import (
@@ -6,24 +7,32 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// PrivacyHandler プライバシーポリシー画面のハンドラー
+/*
+	PrivacyHandler プライバシーポリシーページのハンドラ
+*/
 type PrivacyHandler struct {
 	templates *TemplateManager
 }
 
-// NewPrivacyHandler プライバシーポリシーハンドラーを作成
+/*
+	NewPrivacyHandler は PrivacyHandler を作成します。
+*/
 func NewPrivacyHandler(templates *TemplateManager) *PrivacyHandler {
 	return &PrivacyHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *PrivacyHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/privacy", h.Privacy)
 }
 
-// Privacy プライバシーポリシーページの表示
+/*
+	Privacy プライバシーポリシーページを表示
+*/
 func (h *PrivacyHandler) Privacy(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "プライバシーポリシー",

@@ -1,3 +1,4 @@
+// 設定画面のハンドラー
 package handler
 
 import (
@@ -12,19 +13,25 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// SettingsHandler 設定画面のハンドラー
+/*
+	SettingsHandler 設定ページのハンドラ
+*/
 type SettingsHandler struct {
 	templates *TemplateManager
 }
 
-// User ユーザー情報の構造体
+/*
+	User ユーザー情報の構造体
+*/
 type User struct {
 	Name     string
 	Email    string
 	Timezone string
 }
 
-// NotificationSettings 通知設定の構造体
+/*
+	NotificationSettings 通知設定の構造体
+*/
 type NotificationSettings struct {
 	EmailEnabled    bool
 	BedtimeReminder bool
@@ -32,14 +39,18 @@ type NotificationSettings struct {
 	WeeklyReport    bool
 }
 
-// NewSettingsHandler 設定ハンドラーを作成
+/*
+	NewSettingsHandler は SettingsHandler を作成します。
+*/
 func NewSettingsHandler(templates *TemplateManager) *SettingsHandler {
 	return &SettingsHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *SettingsHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/settings", h.Settings)
 	r.Post("/settings/profile", h.UpdateProfile)
@@ -51,8 +62,9 @@ func (h *SettingsHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/settings/account/delete", h.DeleteAccount)
 }
 
-
-// Settings 設定ページの表示
+/*
+	Settings 設定画面を表示
+*/
 func (h *SettingsHandler) Settings(w http.ResponseWriter, r *http.Request) {
 	// テストデータの作成
 	user := &models.User{
@@ -84,7 +96,9 @@ func (h *SettingsHandler) Settings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UpdateProfile プロフィール設定の更新
+/*
+	UpdateProfile プロフィールの更新
+*/
 func (h *SettingsHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
@@ -112,7 +126,9 @@ func (h *SettingsHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// UpdatePassword パスワード設定の更新
+/*
+	UpdatePassword パスワードの更新
+*/
 func (h *SettingsHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
@@ -184,7 +200,9 @@ func (h *SettingsHandler) UpdatePassword(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-// UpdateNotifications 通知設定の更新
+/*
+	UpdateNotifications 通知設定の更新
+*/
 func (h *SettingsHandler) UpdateNotifications(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
@@ -192,10 +210,10 @@ func (h *SettingsHandler) UpdateNotifications(w http.ResponseWriter, r *http.Req
 	}
 
 	// TODO: 通知設定の更新の実装
-	emailEnabled := r.FormValue("email_notification") == "on"
-	bedtimeReminder := r.FormValue("bedtime_reminder") == "on"
-	reminderTime := r.FormValue("reminder_time")
-	weeklyReport := r.FormValue("weekly_report") == "on"
+	// emailEnabled := r.FormValue("email_notification") == "on"
+	// bedtimeReminder := r.FormValue("bedtime_reminder") == "on"
+	// reminderTime := r.FormValue("reminder_time")
+	// weeklyReport := r.FormValue("weekly_report") == "on"
 
 	data := &TemplateData{
 		Title:      "設定",
@@ -213,7 +231,9 @@ func (h *SettingsHandler) UpdateNotifications(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// ShowDeleteAccountPage アカウント削除確認ページの表示
+/*
+	ShowDeleteAccountPage アカウント削除の確認
+*/
 func (h *SettingsHandler) ShowDeleteAccountPage(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "アカウント削除の確認",
@@ -227,15 +247,17 @@ func (h *SettingsHandler) ShowDeleteAccountPage(w http.ResponseWriter, r *http.R
 	}
 }
 
-// DeleteAccount アカウントの削除
+/*
+	DeleteAccount アカウントの削除
+*/
 func (h *SettingsHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
 		return
 	}
 
-	password := r.FormValue("password")
-	confirmDelete := r.FormValue("confirm_delete") == "on"
+	// password := r.FormValue("password")
+	// confirmDelete := r.FormValue("confirm_delete") == "on"
 
 	// TODO: アカウント削除の実装
 
@@ -243,7 +265,9 @@ func (h *SettingsHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-// ExportCSV 睡眠記録のCSVエクスポート
+/*
+	ExportCSV 睡眠記録のCSVエクスポート
+*/
 func (h *SettingsHandler) ExportCSV(w http.ResponseWriter, r *http.Request) {
 	// ファイル名の設定
 	filename := fmt.Sprintf("sleep-records-%s.csv", time.Now().Format("2006-01-02"))
@@ -265,7 +289,9 @@ func (h *SettingsHandler) ExportCSV(w http.ResponseWriter, r *http.Request) {
 	// データベースからユーザーの睡眠記録を取得して書き込む
 }
 
-// ExportJSON 睡眠記録のJSONエクスポート
+/*
+	ExportJSON 睡眠記録のJSONエクスポート
+*/
 func (h *SettingsHandler) ExportJSON(w http.ResponseWriter, r *http.Request) {
 	// ファイル名の設定
 	filename := fmt.Sprintf("sleep-records-%s.json", time.Now().Format("2006-01-02"))

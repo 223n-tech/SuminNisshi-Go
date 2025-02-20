@@ -1,3 +1,4 @@
+// main.go は SuiminNisshi のエントリーポイントです。このファイルは、サーバーの初期化、設定の読み込み、データベース接続、ルーターの設定、ハンドラーの登録、サーバーの起動、グレースフルシャットダウンを行います。
 package main
 
 import (
@@ -21,6 +22,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
+// main 関数は、サーバーの初期化、設定の読み込み、データベース接続、ルーターの設定、ハンドラーの登録、サーバーの起動、グレースフルシャットダウンを行います。
 func main() {
 	// ロガーの初期化
 	logger := log.New(os.Stdout, "[SuiminNisshi] ", log.LstdFlags|log.Lshortfile)

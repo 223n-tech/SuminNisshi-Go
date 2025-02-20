@@ -1,3 +1,4 @@
+// 睡眠記録画面のハンドラーを定義
 package handler
 
 import (
@@ -9,12 +10,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// SleepRecordHandler 睡眠記録画面のハンドラー
+/*
+	SleepRecordHandler 睡眠記録関連のハンドラ
+*/
 type SleepRecordHandler struct {
 	templates *TemplateManager
 }
 
-// SleepRecord 睡眠記録のデータ構造
+/*
+	SleepRecord 睡眠記録の構造体
+*/
 type SleepRecord struct {
 	ID             int64
 	Date           time.Time
@@ -29,7 +34,9 @@ type SleepRecord struct {
 	UpdatedAt      time.Time
 }
 
-// SleepRecordFilter 睡眠記録のフィルター条件
+/*
+	SleepRecordFilter 睡眠記録のフィルター条件
+*/
 type SleepRecordFilter struct {
 	StartDate    time.Time `json:"startDate"`
 	EndDate      time.Time `json:"endDate"`
@@ -41,14 +48,18 @@ type SleepRecordFilter struct {
 	SortOrder    string    `json:"sortOrder"`
 }
 
-// NewSleepRecordHandler 睡眠記録ハンドラーを作成
+/*
+	NewSleepRecordHandler は SleepRecordHandler を作成します。
+*/
 func NewSleepRecordHandler(templates *TemplateManager) *SleepRecordHandler {
 	return &SleepRecordHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *SleepRecordHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/sleep-records", h.List)
 	r.Get("/sleep-records/new", h.New)
@@ -63,7 +74,9 @@ func (h *SleepRecordHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/api/sleep-records/filter", h.FilterAPI)
 }
 
-// List 睡眠記録一覧の表示
+/*
+	List 睡眠記録一覧の表示
+*/
 func (h *SleepRecordHandler) List(w http.ResponseWriter, r *http.Request) {
 	// TODO: データベースから実際のデータを取得
 	records := []SleepRecord{
@@ -106,7 +119,9 @@ func (h *SleepRecordHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// New 新規記録フォームの表示
+/*
+	New 新規記録の作成
+*/
 func (h *SleepRecordHandler) New(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title:      "睡眠記録の作成",
@@ -125,7 +140,9 @@ func (h *SleepRecordHandler) New(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Create 新規記録の作成
+/*
+	Create 記録の作成
+*/
 func (h *SleepRecordHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
@@ -136,7 +153,9 @@ func (h *SleepRecordHandler) Create(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/sleep-records", http.StatusSeeOther)
 }
 
-// Show 記録詳細の表示
+/*
+	Show 記録の詳細表示
+*/
 func (h *SleepRecordHandler) Show(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	recordID, err := strconv.ParseInt(id, 10, 64)
@@ -173,7 +192,9 @@ func (h *SleepRecordHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Edit 記録編集フォームの表示
+/*
+	Edit 記録の編集
+*/
 func (h *SleepRecordHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	recordID, err := strconv.ParseInt(id, 10, 64)
@@ -204,7 +225,9 @@ func (h *SleepRecordHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Update 記録の更新
+/*
+	Update 記録の更新
+*/
 func (h *SleepRecordHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	_, err := strconv.ParseInt(id, 10, 64)
@@ -222,7 +245,9 @@ func (h *SleepRecordHandler) Update(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/sleep-records", http.StatusSeeOther)
 }
 
-// Delete 記録の削除
+/*
+	Delete 記録の削除
+*/
 func (h *SleepRecordHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	_, err := strconv.ParseInt(id, 10, 64)
@@ -235,7 +260,9 @@ func (h *SleepRecordHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ListAPI 睡眠記録一覧のJSON返却
+/*
+	ListAPI 睡眠記録一覧の取得
+*/
 func (h *SleepRecordHandler) ListAPI(w http.ResponseWriter, r *http.Request) {
 	// TODO: データベースからデータを取得
 	records := []SleepRecord{
@@ -250,7 +277,9 @@ func (h *SleepRecordHandler) ListAPI(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(records)
 }
 
-// FilterAPI フィルター条件に基づく睡眠記録の取得
+/*
+	FilterAPI 睡眠記録のフィルタリング
+*/
 func (h *SleepRecordHandler) FilterAPI(w http.ResponseWriter, r *http.Request) {
 	var filter SleepRecordFilter
 	if err := json.NewDecoder(r.Body).Decode(&filter); err != nil {
@@ -265,7 +294,9 @@ func (h *SleepRecordHandler) FilterAPI(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(records)
 }
 
-// getScoreColorClass スコアに応じた色クラスを返す
+/*
+	getScoreColorClass 睡眠スコアに応じた色のクラスを取得
+*/
 func getScoreColorClass(score int) string {
 	switch {
 	case score >= 90:

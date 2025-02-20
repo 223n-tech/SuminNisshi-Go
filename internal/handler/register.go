@@ -1,3 +1,4 @@
+// 新規登録画面のハンドラーを定義
 package handler
 
 import (
@@ -8,12 +9,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// RegisterHandler 新規登録画面のハンドラー
+/*
+	RegisterHandler は新規登録画面のハンドラです。
+*/
 type RegisterHandler struct {
 	templates *TemplateManager
 }
 
-// RegisterData 登録フォームのデータ
+/*
+	RegisterData は新規登録画面のデータを保持します。
+*/
 type RegisterData struct {
 	Name                 string
 	Email                string
@@ -23,20 +28,26 @@ type RegisterData struct {
 	Error               string
 }
 
-// NewRegisterHandler 新規登録ハンドラーを作成
+/*
+	NewRegisterHandler は RegisterHandler を作成します。
+*/
 func NewRegisterHandler(templates *TemplateManager) *RegisterHandler {
 	return &RegisterHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes はルーティングを登録します。
+*/
 func (h *RegisterHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/register", h.RegisterPage)
 	r.Post("/register", h.Register)
 }
 
-// RegisterPage 新規登録ページの表示
+/*
+	RegisterPage は新規登録画面を表示します。
+*/
 func (h *RegisterHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "アカウント登録",
@@ -49,7 +60,9 @@ func (h *RegisterHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Register 新規登録の処理
+/*
+	Register は新規登録処理を行います。
+*/
 func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
@@ -86,7 +99,9 @@ func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-// validateRegisterData 登録データのバリデーション
+/*
+	validateRegisterData は新規登録データのバリデーションを行います。
+*/
 func (h *RegisterHandler) validateRegisterData(data *RegisterData) error {
 	if data.Name == "" {
 		return fmt.Errorf("名前を入力してください")

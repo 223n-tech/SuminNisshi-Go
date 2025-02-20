@@ -1,3 +1,4 @@
+// パスワードリセット関連のハンドラー
 package handler
 
 import (
@@ -7,19 +8,25 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// PasswordResetHandler パスワードリセット関連のハンドラー
+/*
+	PasswordResetHandler パスワードリセット関連のハンドラ
+*/
 type PasswordResetHandler struct {
 	templates *TemplateManager
 }
 
-// NewPasswordResetHandler パスワードリセットハンドラーを作成
+/*
+	NewPasswordResetHandler は PasswordResetHandler を作成します。
+*/
 func NewPasswordResetHandler(templates *TemplateManager) *PasswordResetHandler {
 	return &PasswordResetHandler{
 		templates: templates,
 	}
 }
 
-// RegisterRoutes ルートの登録
+/*
+	RegisterRoutes ルーティングを登録
+*/
 func (h *PasswordResetHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/forgot-password", h.ShowForgotPasswordForm)
 	r.Post("/forgot-password", h.HandleForgotPassword)
@@ -27,7 +34,9 @@ func (h *PasswordResetHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/reset-password/{token}", h.HandleResetPassword)
 }
 
-// ShowForgotPasswordForm パスワード忘れフォームの表示
+/*
+	ShowForgotPasswordForm パスワードリセットフォームの表示
+*/
 func (h *PasswordResetHandler) ShowForgotPasswordForm(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "パスワードの再設定",
@@ -40,7 +49,9 @@ func (h *PasswordResetHandler) ShowForgotPasswordForm(w http.ResponseWriter, r *
 	}
 }
 
-// HandleForgotPassword パスワードリセットメールの送信処理
+/*
+	HandleForgotPassword パスワードリセットの処理
+*/
 func (h *PasswordResetHandler) HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// TODO: メール送信処理の実装
 	_ = r.FormValue("email")
@@ -66,7 +77,9 @@ func (h *PasswordResetHandler) HandleForgotPassword(w http.ResponseWriter, r *ht
 	}
 }
 
-// ShowResetPasswordForm パスワード再設定フォームの表示
+/*
+	ShowResetPasswordForm パスワード再設定フォームの表示
+*/
 func (h *PasswordResetHandler) ShowResetPasswordForm(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
 
@@ -88,7 +101,9 @@ func (h *PasswordResetHandler) ShowResetPasswordForm(w http.ResponseWriter, r *h
 	}
 }
 
-// HandleResetPassword パスワード再設定の処理
+/*
+	HandleResetPassword パスワード再設定の処理
+*/
 func (h *PasswordResetHandler) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
 	password := r.FormValue("password")
