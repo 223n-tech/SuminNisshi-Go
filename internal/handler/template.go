@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
@@ -120,7 +121,8 @@ func (tm *TemplateManager) LoadTemplates() error {
 
 	// ログインと登録ページは独立したテンプレート
 	logger.Printf("[START] Loading standalone pages from %s", tm.basePath)  // デバッグ用
-	for _, page := range []string{"login.html", "register.html"} {
+	noTemplatePages := []string{"login.html", "register.html", "delete-account.html", "forgot-password.html", "reset-password.html"}
+	for _, page := range noTemplatePages {
 		fullPath := filepath.Join(tm.basePath, "pages", page)
 		template, err := template.New(page).Funcs(tm.funcMap).ParseFiles(fullPath)
 		if err != nil {
@@ -147,7 +149,7 @@ func (tm *TemplateManager) LoadTemplates() error {
 		name := filepath.Base(page)
 		logger.Printf("[%d] Loading template: %s", i, name)  // デバッグ用
 		// ログインと登録ページはスキップ
-		if name == "login.html" || name == "register.html" {
+		if slices.Contains(noTemplatePages, name) {
 			logger.Printf("[SKIP] Skipping standalone page: %s", name)  // デバッグ用
 			continue
 		}
