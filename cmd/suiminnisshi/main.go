@@ -94,6 +94,11 @@ func main() {
 	authHandler := handler.NewAuthHandler(tm)
 	authHandler.RegisterRoutes(router)
 
+	// アカウント削除ハンドラーの初期化と登録
+	logger.Printf("[Initialize] Registering account deletion routes...")
+	accountDeletionHandler := handler.NewAccountDeletionHandler(tm)
+	accountDeletionHandler.RegisterRoutes(r)
+
 	// ダッシュボードハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering dashboard routes...")
 	dashboardHandler := handler.NewDashboardHandler(tm, svc)
