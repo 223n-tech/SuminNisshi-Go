@@ -3,6 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
+  "postStartCommand": "direnv allow",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -16,7 +17,13 @@
         "oderwat.indent-rainbow",
         "PKief.material-icon-theme",
         "mosapride.zenkaku",
-        "formulahendry.code-runner"
+        "formulahendry.code-runner",
+        "ics.japanese-proofreading",
+        "esbenp.prettier-vscode",
+        "davidanson.vscode-markdownlint",
+        "yzhang.markdown-all-in-one",
+        "bierner.markdown-preview-github-styles",
+        "yzane.markdown-pdf"
       ],
       "settings": {
         "go.toolsManagement.checkForUpdates": "local",
