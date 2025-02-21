@@ -40,11 +40,12 @@ type Flash struct {
 	TemplateManager テンプレートマネージャ
 */
 type TemplateManager struct {
-	templates map[string]*template.Template
-	mutex     sync.RWMutex
-	basePath  string
-	funcMap   template.FuncMap
-	embedFS   *embed.FS
+	templates      map[string]*template.Template
+	mutex          sync.RWMutex
+	basePath       string
+	funcMap        template.FuncMap
+	embedFS        *embed.FS
+	standalonePages []string
 }
 
 /*
@@ -52,10 +53,20 @@ type TemplateManager struct {
 */
 func NewTemplateManager(basePath string, embedFS *embed.FS) *TemplateManager {
 	return &TemplateManager{
-		templates: make(map[string]*template.Template),
-		basePath:  basePath,
-		embedFS:   embedFS,
-		funcMap:   makeTemplateFuncMap(),
+		templates:       make(map[string]*template.Template),
+		basePath:        basePath,
+		embedFS:         embedFS,
+		funcMap:         makeTemplateFuncMap(),
+		standalonePages: []string{
+			"login.html",
+			"register.html",
+			"delete-account.html",
+			"forgot-password.html",
+			"reset-password.html",
+			"404.html",
+			"500.html",
+			"403.html",
+		},
 	}
 }
 
@@ -96,6 +107,7 @@ func makeTemplateFuncMap() template.FuncMap {
 	}
 }
 
+
 /*
 	LoadTemplates はテンプレートを読み込みます。
 */
@@ -105,65 +117,61 @@ func (tm *TemplateManager) LoadTemplates() error {
 	logger := log.New(os.Stdout, "[SuiminNisshi] ", log.LstdFlags|log.Lshortfile)
 
 	// ベースレイアウトを読み込み
-	logger.Printf("[START] Loading templates from %s", tm.basePath)  // デバッグ用
+	logger.Printf("[START] Loading templates from %s", tm.basePath)
 	layouts, err := filepath.Glob(filepath.Join(tm.basePath, "layouts/*.html"))
 	if err != nil {
 		return fmt.Errorf("[NG] error loading layouts: %v", err)
 	}
+	logger.Printf("[OK] Loaded layouts: %v", layouts)
 
 	// パーシャルテンプレートを読み込み
-	logger.Printf("[START] Loading partials from %s", tm.basePath)  // デバッグ用
+	logger.Printf("[START] Loading partials from %s", tm.basePath)
 	partials, err := filepath.Glob(filepath.Join(tm.basePath, "partials/*.html"))
 	if err != nil {
 		return fmt.Errorf("[NG] error loading partials: %v", err)
 	}
+	logger.Printf("[OK] Loaded partials: %v", partials)
 
 	// 通常ページテンプレートを読み込み
-	logger.Printf("[START] Loading pages from %s", tm.basePath)  // デバッグ用
+	logger.Printf("[START] Loading pages from %s", tm.basePath)
 	pages, err := filepath.Glob(filepath.Join(tm.basePath, "pages/*.html"))
 	if err != nil {
 		return fmt.Errorf("[NG] error loading pages: %v", err)
 	}
+	logger.Printf("[OK] Loaded pages: %v", pages)
 
 	// エラーページテンプレートを読み込み
-	logger.Printf("[START] Loading error pages from %s", tm.basePath)  // デバッグ用
+	logger.Printf("[START] Loading error pages from %s", tm.basePath)
 	errorPages, err := filepath.Glob(filepath.Join(tm.basePath, "errors/*.html"))
 	if err != nil {
 		return fmt.Errorf("[NG] error loading error pages: %v", err)
 	}
+	logger.Printf("[OK] Loaded error pages: %v", errorPages)
 
-	// ログインと登録ページは独立したテンプレート
-	logger.Printf("[START] Loading standalone pages from %s", tm.basePath)  // デバッグ用
-	noTemplatePages := []string{"login.html", "register.html", "delete-account.html", "forgot-password.html", "reset-password.html"}
-	for _, page := range noTemplatePages {
-		fullPath := filepath.Join(tm.basePath, "pages", page)
+	// スタンドアロンページの読み込み
+	logger.Printf("[START] Loading standalone pages from %s", tm.basePath)
+	for _, page := range tm.standalonePages {
+		var fullPath string
+		if slices.Contains([]string{"404.html", "500.html", "403.html"}, page) {
+			fullPath = filepath.Join(tm.basePath, "errors", page)
+		} else {
+			fullPath = filepath.Join(tm.basePath, "pages", page)
+		}
 		template, err := template.New(page).Funcs(tm.funcMap).ParseFiles(fullPath)
 		if err != nil {
 			return fmt.Errorf("[NG] error parsing %s: %v", page, err)
 		}
 		tm.templates[page] = template
-	}
-
-	// エラーページは独立したテンプレート
-	logger.Printf("[START] Loading standalone error pages from %s", tm.basePath)  // デバッグ用
-	for _, page := range errorPages {
-		name := filepath.Base(page)
-		template, err := template.New(name).Funcs(tm.funcMap).ParseFiles(page)
-		if err != nil {
-			return fmt.Errorf("error parsing error page %s: %v", name, err)
-		}
-		tm.templates[name] = template
-		logger.Printf("[OK] Loaded error template: %s", name)  // デバッグ用
+		logger.Printf("[OK] Loaded standalone template: %s", page)
 	}
 
 	// その他のページはレイアウトとパーシャルを含む
-	logger.Printf("[START] Loading normal pages from %s", tm.basePath)  // デバッグ用
-	for i, page := range pages {
+	logger.Printf("[START] Loading normal pages from %s", tm.basePath)
+	for _, page := range pages {
 		name := filepath.Base(page)
-		logger.Printf("[%d] Loading template: %s", i, name)  // デバッグ用
-		// ログインと登録ページはスキップ
-		if slices.Contains(noTemplatePages, name) {
-			logger.Printf("[SKIP] Skipping standalone page: %s", name)  // デバッグ用
+		// スタンドアロンページはスキップ
+		if slices.Contains(tm.standalonePages, name) {
+			logger.Printf("[SKIP] Skipping standalone page: %s", name)
 			continue
 		}
 		files := append(append(layouts, partials...), page)
@@ -172,27 +180,11 @@ func (tm *TemplateManager) LoadTemplates() error {
 			return fmt.Errorf("[NG] error parsing %s: %v", name, err)
 		}
 		tm.templates[name] = template
-		logger.Printf("[OK] Loaded template: %s with files: %v", name, files)  // デバッグ用
+		logger.Printf("[OK] Loaded template: %s with files: %v", name, files)
 	}
 
-	logger.Printf("[OK] All loaded templates: %v", tm.GetTemplateNames(false))  // デバッグ用
+	logger.Printf("[OK] All loaded templates: %v", tm.GetTemplateNames(false))
 	return nil
-}
-
-/*
-	GetTemplateNames はテンプレート名のスライスを返します。
-*/
-func (tm *TemplateManager) GetTemplateNames(isLock bool) []string {
-	if (isLock) {
-		tm.mutex.RLock()
-		defer tm.mutex.RUnlock()	
-	} 
-
-	names := make([]string, 0, len(tm.templates))
-	for name := range tm.templates {
-		names = append(names, name)
-	}
-	return names
 }
 
 /*
@@ -215,14 +207,29 @@ func (tm *TemplateManager) Render(w http.ResponseWriter, name string, data *Temp
 		data.Meta = make(map[string]interface{})
 	}
 
-	// スタンドアロンページと独立したテンプレートの処理
-	standalone := []string{"login.html", "register.html", "404.html", "500.html", "403.html"}
-	if contains(standalone, name) {
+	// スタンドアロンページの処理
+	if slices.Contains(tm.standalonePages, name) {
 		return template.Execute(w, data)
 	}
 
 	// その他のページはbase.htmlを使用
 	return template.ExecuteTemplate(w, "base.html", data)
+}
+
+/*
+	GetTemplateNames はテンプレート名のスライスを返します。
+*/
+func (tm *TemplateManager) GetTemplateNames(isLock bool) []string {
+	if (isLock) {
+		tm.mutex.RLock()
+		defer tm.mutex.RUnlock()	
+	} 
+
+	names := make([]string, 0, len(tm.templates))
+	for name := range tm.templates {
+		names = append(names, name)
+	}
+	return names
 }
 
 /*
