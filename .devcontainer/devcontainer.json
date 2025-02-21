@@ -3,7 +3,9 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
-  "postStartCommand": "direnv allow",
+  "postCreateCommand": "sudo chown -R vscode:vscode /workspace",
+  "postStartCommand": "/bin/bash /workspace/.devcontainer/setup-envrc.sh",
+  "mounts": [],
   "customizations": {
     "vscode": {
       "extensions": [

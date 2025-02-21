@@ -1,14 +1,13 @@
 services:
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     volumes:
       - ..:/workspace:cached
       - go-cache:/go
-      - vscode:/vscode:cached
     user: vscode
-    command: ["/usr/local/bin/setup-envrc.sh"]
+    command: "/bin/bash -c 'while sleep 1000; do :; done'"  # コンテナを起動し続けるコマンドを追加
     environment:
       - DB_HOST=db
       - DB_USER=suiminnisshi
@@ -35,7 +34,7 @@ volumes:
   go-cache:
   mariadb-data:
   vscode:
-    external: true
+    external: false
 
 networks:
   suiminnisshi-network:
