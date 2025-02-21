@@ -32,7 +32,7 @@
                 </div>
                 {{end}}
 
-                <form action="/register" method="post">
+                <form action="/register" method="post" id="registerForm">
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" placeholder="ニックネーム" name="name" required>
                         <div class="input-group-append">
@@ -50,9 +50,8 @@
                         </div>
                     </div>
                     <div class="input-group mb-3">
-                        <input type="password" class="form-control" placeholder="パスワード" name="password"
-                            required pattern="^(?!.*\s)(?!.*[^\x00-\x7F])[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]{8,}$"
-                            title="パスワードは8文字以上で、全角文字とスペースは禁止です">
+                        <input type="password" class="form-control" placeholder="パスワード" name="password" id="password"
+                            required>
                         <div class="input-group-append">
                             <div class="input-group-text">
                                 <span class="fas fa-lock"></span>
@@ -61,7 +60,7 @@
                     </div>
                     <div class="input-group mb-3">
                         <input type="password" class="form-control" placeholder="パスワード（確認）" name="password_confirmation"
-                            required>
+                            id="password_confirmation" required>
                         <div class="input-group-append">
                             <div class="input-group-text">
                                 <span class="fas fa-lock"></span>
@@ -77,11 +76,9 @@
                                 </label>
                             </div>
                         </div>
-                        <!-- /.col -->
                         <div class="col-4">
                             <button type="submit" class="btn btn-primary btn-block">登録</button>
                         </div>
-                        <!-- /.col -->
                     </div>
                 </form>
 
@@ -91,6 +88,7 @@
                         <li>8文字以上</li>
                         <li>スペースは禁止</li>
                         <li>全角文字は禁止</li>
+                        <li>半角英数字と記号のみ使用可能</li>
                     </ul>
                 </div>
 
@@ -98,11 +96,8 @@
                     すでにアカウントをお持ちの方は<a href="/login" class="text-center">こちら</a>
                 </p>
             </div>
-            <!-- /.card-body -->
         </div>
-        <!-- /.card -->
     </div>
-    <!-- /.register-box -->
 
     <!-- jQuery -->
     <script src="/static/adminlte/plugins/jquery/jquery.min.js"></script>
@@ -113,15 +108,34 @@
     <!-- Password Validation -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('form');
-            const password = document.querySelector('input[name="password"]');
-            const passwordConfirm = document.querySelector('input[name="password_confirmation"]');
+            const form = document.getElementById('registerForm');
+            const password = document.getElementById('password');
+            const passwordConfirm = document.getElementById('password_confirmation');
+
+            function validatePassword(pwd) {
+                // 8文字以上
+                if (pwd.length < 8) return false;
+
+                // スペースと全角文字のチェック
+                if (/[\s]/.test(pwd) || /[^\x00-\x7F]/.test(pwd)) return false;
+
+                // 半角英数字と記号のみ
+                return /^[A-Za-z0-9!@#$%^&*()_+\-=[\]{};:"\\|,.<>/?]+$/.test(pwd);
+            }
 
             form.addEventListener('submit', function (e) {
+                if (!validatePassword(password.value)) {
+                    e.preventDefault();
+                    alert('パスワードが要件を満たしていません。');
+                    password.focus();
+                    return;
+                }
+
                 if (password.value !== passwordConfirm.value) {
                     e.preventDefault();
                     alert('パスワードが一致しません。');
                     passwordConfirm.focus();
+                    return;
                 }
             });
         });
