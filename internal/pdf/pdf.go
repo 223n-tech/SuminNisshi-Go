@@ -1,211 +1,244 @@
-// PDFファイルを作成するためのパッケージ
+// internal/pdf/pdf.go
+
 package pdf
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
-	"github.com/jung-kurt/gofpdf"
+	"github.com/signintech/gopdf"
 )
 
-/*
-	PDFの構成
-*/
-const (
-	// ページ設定
-	pageWidth     = 297.0  // A4横
-	pageHeight    = 210.0  // A4縦
-	marginTop     = 20.0
-	marginBottom  = 20.0
-	marginLeft    = 15.0
-	marginRight   = 15.0
-
-	// グリッドの設定
-	cellWidth     = 10.0   // 30分あたりの幅
-	cellHeight    = 8.0    // セルの高さ
-	timeRowHeight = 6.0    // 時刻行の高さ
-
-	// フォントサイズ
-	titleFontSize   = 14
-	normalFontSize  = 10
-	symbolFontSize  = 12
-)
-
-/*
-	SleepDiaryPDF PDFファイルを作成するための構造体
-*/
-type SleepDiaryPDF struct {
-	pdf *gofpdf.Fpdf
+// Generator PDFを生成するための構造体
+type Generator struct {
+	pdf      *gopdf.GoPdf
+	fontPath string
 }
 
-/*
-	NewSleepDiaryPDF PDFインスタンスの作成
-*/
-func NewSleepDiaryPDF() *SleepDiaryPDF {
-	pdf := gofpdf.New("L", "mm", "A4", "")
+// New 新しいPDFジェネレーターを作成
+func New(fontPath string) *Generator {
+	pdf := &gopdf.GoPdf{}
+	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	
-	// フォントの追加
-	pdf.AddFont("IPAGothic", "", "ipag.ttf")
-	
-	return &SleepDiaryPDF{
-		pdf: pdf,
+	return &Generator{
+		pdf:      pdf,
+		fontPath: fontPath,
 	}
 }
 
-/*
-	SetHeader ヘッダーの設定
-*/
-func (s *SleepDiaryPDF) SetHeader(userName string) {
-	s.pdf.AddPage()
-	s.pdf.SetFont("IPAGothic", "", titleFontSize)
-	
-	// タイトル
-	s.pdf.Cell(40, 10, "睡眠日誌")
-	
-	// ユーザー名
-	s.pdf.SetFont("IPAGothic", "", normalFontSize)
-	s.pdf.Cell(40, 10, fmt.Sprintf("お名前：%s", userName))
-}
-
-/*
-	DrawTimeGrid 時間軸グリッドの描画
-*/
-func (s *SleepDiaryPDF) DrawTimeGrid(x, y float64) {
-	s.pdf.SetFont("IPAGothic", "", normalFontSize)
-	
-	// 時刻の描画（00-23時）
-	for hour := 0; hour < 24; hour++ {
-		xPos := x + float64(hour*2)*cellWidth
-		s.pdf.Text(xPos, y, fmt.Sprintf("%02d", hour))
+// GenerateSleepRecord 睡眠記録のPDFを生成
+func (g *Generator) GenerateSleepRecord(data *SleepRecordData) (*bytes.Buffer, error) {
+	// フォントの設定
+	err := g.setupFont()
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup font: %v", err)
 	}
 
-	// グリッド線の描画
-	for i := 0; i <= 48; i++ { // 30分毎、48マス
-		xPos := x + float64(i)*cellWidth
-		
-		// 時間単位の区切り線は太く
-		if i%2 == 0 {
-			s.pdf.SetLineWidth(0.3)
-		} else {
-			s.pdf.SetLineWidth(0.1)
+	// ページを追加
+	g.pdf.AddPage()
+
+	// ヘッダーを設定
+	if err := g.pdf.SetFont("gothic", "", 16); err != nil {
+		return nil, fmt.Errorf("failed to set font: %v", err)
+	}
+	if err := g.pdf.Text("睡眠記録"); err != nil {
+		return nil, fmt.Errorf("failed to write text: %v", err)
+	}
+	g.pdf.SetY(g.pdf.GetY() + 15)
+
+	// 基本情報
+	if err := g.pdf.SetFont("gothic", "", 12); err != nil {
+		return nil, fmt.Errorf("failed to set font: %v", err)
+	}
+	if err := g.writeBasicInfo(data); err != nil {
+		return nil, fmt.Errorf("failed to write basic info: %v", err)
+	}
+
+	// 睡眠データ
+	g.pdf.SetY(g.pdf.GetY() + 10)
+	if err := g.writeSleepData(data); err != nil {
+		return nil, fmt.Errorf("failed to write sleep data: %v", err)
+	}
+
+	// 統計データ
+	g.pdf.SetY(g.pdf.GetY() + 10)
+	if err := g.writeStatistics(data); err != nil {
+		return nil, fmt.Errorf("failed to write statistics: %v", err)
+	}
+
+	// PDFをバッファに出力
+	var buf bytes.Buffer
+	if _, err = g.pdf.WriteTo(&buf); err != nil {
+		return nil, fmt.Errorf("failed to generate PDF: %v", err)
+	}
+
+	return &buf, nil
+}
+
+// setupFont フォントの設定
+func (g *Generator) setupFont() error {
+	err := g.pdf.AddTTFFont("gothic", g.fontPath)
+	if err != nil {
+		return fmt.Errorf("failed to add font: %v", err)
+	}
+	return nil
+}
+
+// writeBasicInfo 基本情報を書き込み
+func (g *Generator) writeBasicInfo(data *SleepRecordData) error {
+	if err := g.pdf.SetFont("gothic", "", 14); err != nil {
+		return err
+	}
+	if err := g.pdf.Text("基本情報"); err != nil {
+		return err
+	}
+	g.pdf.SetY(g.pdf.GetY() + 10)
+
+	if err := g.pdf.SetFont("gothic", "", 12); err != nil {
+		return err
+	}
+	
+	// 期間
+	if err := g.pdf.Text("期間:"); err != nil {
+		return err
+	}
+	g.pdf.SetX(60)
+	periodText := fmt.Sprintf("%s 〜 %s", 
+		data.StartDate.Format("2006/01/02"),
+		data.EndDate.Format("2006/01/02"))
+	if err := g.pdf.Text(periodText); err != nil {
+		return err
+	}
+	g.pdf.SetY(g.pdf.GetY() + 8)
+
+	// 記録日数
+	if err := g.pdf.Text("記録日数:"); err != nil {
+		return err
+	}
+	g.pdf.SetX(60)
+	if err := g.pdf.Text(fmt.Sprintf("%d 日", data.TotalDays)); err != nil {
+		return err
+	}
+	g.pdf.SetY(g.pdf.GetY() + 8)
+
+	return nil
+}
+
+// writeSleepData 睡眠データを書き込み
+func (g *Generator) writeSleepData(data *SleepRecordData) error {
+	if err := g.pdf.SetFont("gothic", "", 14); err != nil {
+		return err
+	}
+	if err := g.pdf.Text("睡眠データ"); err != nil {
+		return err
+	}
+	g.pdf.SetY(g.pdf.GetY() + 10)
+
+	// テーブルヘッダー
+	if err := g.pdf.SetFont("gothic", "", 12); err != nil {
+		return err
+	}
+
+	headers := []string{"日付", "就寝時刻", "起床時刻", "睡眠時間", "睡眠スコア"}
+	xPositions := []float64{10, 50, 90, 130, 170}
+	
+	for i, header := range headers {
+		g.pdf.SetX(xPositions[i])
+		if err := g.pdf.Text(header); err != nil {
+			return err
+		}
+	}
+	g.pdf.SetY(g.pdf.GetY() + 8)
+
+	// テーブルデータ
+	for _, record := range data.Records {
+		g.pdf.SetX(xPositions[0])
+		if err := g.pdf.Text(record.Date.Format("2006/01/02")); err != nil {
+			return err
 		}
 		
-		s.pdf.Line(xPos, y+timeRowHeight, xPos, y+timeRowHeight+4*cellHeight)
+		g.pdf.SetX(xPositions[1])
+		if err := g.pdf.Text(record.BedTime); err != nil {
+			return err
+		}
+		
+		g.pdf.SetX(xPositions[2])
+		if err := g.pdf.Text(record.WakeTime); err != nil {
+			return err
+		}
+		
+		g.pdf.SetX(xPositions[3])
+		if err := g.pdf.Text(fmt.Sprintf("%.1f時間", record.Duration)); err != nil {
+			return err
+		}
+		
+		g.pdf.SetX(xPositions[4])
+		if err := g.pdf.Text(fmt.Sprintf("%d点", record.Score)); err != nil {
+			return err
+		}
+		
+		g.pdf.SetY(g.pdf.GetY() + 8)
 	}
 
-	// 横線の描画（4段分）
-	for i := 0; i <= 4; i++ {
-		yPos := y + timeRowHeight + float64(i)*cellHeight
-		s.pdf.SetLineWidth(0.3)
-		s.pdf.Line(x, yPos, x+48*cellWidth, yPos)
-	}
+	return nil
 }
 
-/*
-	DrawLegend 凡例の描画
-*/
-func (s *SleepDiaryPDF) DrawLegend(x, y float64) {
-	s.pdf.SetFont("IPAGothic", "", normalFontSize)
+// writeStatistics 統計データを書き込み
+func (g *Generator) writeStatistics(data *SleepRecordData) error {
+	if err := g.pdf.SetFont("gothic", "", 14); err != nil {
+		return err
+	}
+	if err := g.pdf.Text("統計データ"); err != nil {
+		return err
+	}
+	g.pdf.SetY(g.pdf.GetY() + 10)
+
+	if err := g.pdf.SetFont("gothic", "", 12); err != nil {
+		return err
+	}
 	
-	legends := []struct {
-		symbol string
-		text   string
+	stats := []struct {
+		label string
+		value string
 	}{
-		{"■", "睡眠中"},
-		{"╱", "床で覚醒"},
-		{"□", "通常覚醒"},
-		{"Z", "強い眠気"},
-		{"×", "睡眠薬服用"},
-		{"▲", "朝食"},
-		{"●", "昼食"},
-		{"■", "夕食"},
-		{"○", "軽食"},
+		{"平均睡眠時間:", fmt.Sprintf("%.1f時間", data.AverageDuration)},
+		{"平均就寝時刻:", data.AverageBedTime},
+		{"平均起床時刻:", data.AverageWakeTime},
+		{"平均睡眠スコア:", fmt.Sprintf("%.1f点", data.AverageScore)},
 	}
 
-	for i, legend := range legends {
-		yPos := y + float64(i)*6
-		s.pdf.SetFont("IPAGothic", "", symbolFontSize)
-		s.pdf.Text(x, yPos, legend.symbol)
-		s.pdf.SetFont("IPAGothic", "", normalFontSize)
-		s.pdf.Text(x+6, yPos, legend.text)
+	for _, stat := range stats {
+		if err := g.pdf.Text(stat.label); err != nil {
+			return err
+		}
+		g.pdf.SetX(100)
+		if err := g.pdf.Text(stat.value); err != nil {
+			return err
+		}
+		g.pdf.SetY(g.pdf.GetY() + 8)
 	}
+
+	return nil
 }
 
-/*
-	DrawSleepState 睡眠状態の描画
-*/
-func (s *SleepDiaryPDF) DrawSleepState(x, y float64, stateSymbol string, timeSlot time.Time) {
-	hourFloat := float64(timeSlot.Hour()) + float64(timeSlot.Minute())/60.0
-	xPos := x + hourFloat*2*cellWidth
-	
-	s.pdf.SetFont("IPAGothic", "", symbolFontSize)
-	s.pdf.Text(xPos+1, y, stateSymbol)
+// SleepRecordData PDFに出力する睡眠記録データ
+type SleepRecordData struct {
+	StartDate       time.Time
+	EndDate         time.Time
+	TotalDays       int
+	Records         []SleepRecord
+	AverageDuration float64
+	AverageBedTime  string
+	AverageWakeTime string
+	AverageScore    float64
 }
 
-/*
-	DrawEvent イベントの描画
-*/
-func (s *SleepDiaryPDF) DrawEvent(x, y float64, eventSymbol string, timeSlot time.Time) {
-	hourFloat := float64(timeSlot.Hour()) + float64(timeSlot.Minute())/60.0
-	xPos := x + hourFloat*2*cellWidth
-	
-	s.pdf.SetFont("IPAGothic", "", symbolFontSize)
-	s.pdf.Text(xPos+1, y, eventSymbol)
+// SleepRecord 個別の睡眠記録
+type SleepRecord struct {
+	Date     time.Time
+	BedTime  string
+	WakeTime string
+	Duration float64
+	Score    int
 }
-
-/*
-	DrawMeal 食事の描画
-*/
-func (s *SleepDiaryPDF) DrawMeal(x, y float64, mealSymbol string, timeSlot time.Time) {
-	hourFloat := float64(timeSlot.Hour()) + float64(timeSlot.Minute())/60.0
-	xPos := x + hourFloat*2*cellWidth
-	
-	s.pdf.SetFont("IPAGothic", "", symbolFontSize)
-	s.pdf.Text(xPos+1, y, mealSymbol)
-}
-
-/*
-	DrawNote 備考欄の描画
-*/
-func (s *SleepDiaryPDF) DrawNote(x, y float64, note string) {
-	s.pdf.SetFont("IPAGothic", "", normalFontSize)
-	s.pdf.Text(x, y, "備考：")
-	s.pdf.SetFont("IPAGothic", "", normalFontSize)
-	s.pdf.MultiCell(pageWidth-marginLeft-marginRight, 5, note, "", "", false)
-}
-
-/*
-	SavePDF PDFの保存
-*/
-func (s *SleepDiaryPDF) SavePDF(filename string) error {
-	return s.pdf.OutputFileAndClose(filename)
-}
-
-// Usage example:
-/*
-func main() {
-	pdf := NewSleepDiaryPDF()
-	pdf.SetHeader("山田太郎")
-	
-	// グリッドの描画開始位置
-	x := marginLeft
-	y := marginTop + 20
-	
-	pdf.DrawTimeGrid(x, y)
-	pdf.DrawLegend(pageWidth-marginRight-30, y)
-	
-	// 睡眠状態の記録
-	pdf.DrawSleepState(x, y+timeRowHeight+cellHeight, "■", time.Date(2024, 2, 21, 23, 0, 0, 0, time.Local))
-	
-	// イベントの記録
-	pdf.DrawEvent(x, y+timeRowHeight+2*cellHeight, "Z", time.Date(2024, 2, 21, 15, 30, 0, 0, time.Local))
-	
-	// 食事の記録
-	pdf.DrawMeal(x, y+timeRowHeight+3*cellHeight, "▲", time.Date(2024, 2, 21, 7, 0, 0, 0, time.Local))
-	
-	// 備考の記録
-	pdf.DrawNote(x, y+timeRowHeight+5*cellHeight, "夕飯で晩酌 3回トイレに起きた")
-	
-	pdf.SavePDF("sleep_diary.pdf")
-}
-*/
