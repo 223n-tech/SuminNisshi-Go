@@ -1,3 +1,24 @@
 {
-    "makefile.configureOnOpen": false
+  "workbench.settings.useSplitJSON": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "emmet.variables": {
+    "lang": "ja"
+  },
+  "window.zoomLevel": 0,
+  "editor.fontSize": 16,
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "html.format.extraLiners": "",
+  "html.format.preserveNewLines": false,
+  "editor.renderWhitespace": "all",
+  "editor.minimap.showSlider": "always",
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "on",
+    "strings": "on"
+  },
+  "editor.suggest.insertMode": "insert",
+  "files.eol": "\n"
 }
