@@ -21,6 +21,8 @@
    * ログインページ
    * ユーザー登録ページ
    * パスワードリセットページ
+   * アカウント削除確認ページ
+   * データエクスポート確認ページ
 
 2. メイン機能
    * ダッシュボード
@@ -33,11 +35,6 @@
 
 3. その他
    * エラーページ（403, 404, 500）
-
-### 作成中のページ/機能
-
-1. アカウント削除確認ページ
-2. データエクスポート確認ページ
 
 ### 未実装の機能
 
@@ -69,38 +66,100 @@
 │       └── main.go
 ├── internal/
 │   ├── config/
+│   │  └── config.go
 │   ├── handler/
+│   │  ├── account_deletion.go
+│   │  ├── auth.go
+│   │  ├── dashboard.go
+│   │  ├── error.go
+│   │  ├── password_reset.go
+│   │  ├── privacy.go
+│   │  ├── profile.go
+│   │  ├── register.go
+│   │  ├── router.go
+│   │  ├── settings.go
+│   │  ├── sleep_records.go
+│   │  ├── statistics.go
+│   │  ├── template.go
+│   │  └── terms.go
 │   ├── middleware/
+│   │  └── security.go
 │   ├── models/
+│   │  ├── meal_type.go
+│   │  ├── pdf_export.go
+│   │  ├── sleep_diary.go
+│   │  ├── sleep_record.go
+│   │  ├── sleep_state.go
+│   │  ├── user_sleep_preference.go
+│   │  └── user.go
+│   ├── pdf/
+│   │  └── pdf.go
 │   ├── repository/
-│   └── service/
+│   │  ├── mysql/
+│   │  │  ├── db.go
+│   │  │  ├── meal_type_repository.go
+│   │  │  ├── mysql_repository.go
+│   │  │  ├── sleep_diary_repository.go
+│   │  │  ├── sleep_record_repository.go
+│   │  │  ├── sleep_state_repository.go
+│   │  │  ├── user_repository.go
+│   │  │  └── user_sleep_preference_repository.go
+│   │  └── repository.go
+│   ├── service/
+│   │  ├── logger_service.go
+│   │  ├── mail_service.go
+│   │  ├── pdf_service.go
+│   │  ├── service.go
+│   │  ├── sleep_diary_service.go
+│   │  ├── sleep_record_service.go
+│   │  └── user_service.go
+│   └── util/
+│       └── parse.go
+├── static/
+├── tools/
+│   └── doc-template-generator.go
 ├── web/
-│   ├── views/
-│   │   ├── errors/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   └── partials/
-│   └── static/
-│       └── adminlte/
+│   ├── static/
+│   │   └── adminlte/
+│   ├── template/
+│   │   ├── charts/
+│   │   ├── examples/
+│   │   ├── forms/
+│   │   ├── layout/
+│   │   ├── mailbox/
+│   │   ├── search/
+│   │   ├── tables/
+│   │   └── UI/
+│   └── views/
+│        ├── errors/
+│        │  ├── 403.html
+│        │  ├── 404.html
+│        │  └── 500.html
+│        ├── layouts/
+│        │  └── base.html
+│        ├── pages/
+│        │  ├── account-deletion.html
+│        │  ├── dashboard.html
+│        │  ├── delete-account.html
+│        │  ├── export-data.html
+│        │  ├── forgot-password.html
+│        │  ├── login.html
+│        │  ├── privacy.html
+│        │  ├── profile.html
+│        │  ├── register.html
+│        │  ├── reset-password.html
+│        │  ├── settings.html
+│        │  ├── sleep-records-detail.html
+│        │  ├── sleep-records-form.html
+│        │  ├── sleep-records.html
+│        │  ├── statistics.html
+│        │  └── terms.html
+│        └── partials/
+│            ├── footer.html
+│            ├── navbar.html
+│            └── sidebar.html
 └── go.mod
 ```
-
-## 現在の課題
-
-1. modelsパッケージの実装
-   * User構造体の実装
-   * NotificationSettings構造体の実装
-   * パッケージのインポートパス修正
-
-2. テンプレート関連の修正
-   * TemplateDataのMeta対応
-   * エラーページのテンプレート修正
-   * 各ページのデータ構造の整理
-
-3. フォーム処理の改善
-   * バリデーション実装
-   * エラーハンドリング
-   * フラッシュメッセージ対応
 
 ## セットアップ手順
 
@@ -108,12 +167,3 @@
 2. AdminLTEのセットアップ
 3. 環境変数の設定（direnv使用）
 4. データベースのセットアップ（未実装）
-
-## 次のステップ
-
-1. modelsパッケージの完全実装
-2. データベース接続とリポジトリの実装
-3. バリデーション機能の実装
-4. テストの追加
-5. ログ管理の実装
-6. セッション管理の実装
