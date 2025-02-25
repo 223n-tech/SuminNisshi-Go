@@ -124,6 +124,13 @@ make tools.doc
   * [cmd.md](./doc/godoc/cmd.md)
   * [config.md](./doc/godoc/config.md)
   * [handler.md](./doc/godoc/handler.md)
+  * [middleware.md](./doc/godoc/middleware.md)
+  * [models.md](./doc/godoc/models.md)
+  * [pdf.md](./doc/godoc/pdf.md)
+  * [repository.md](./doc/godoc/repository.md)
+  * [service.md](./doc/godoc/service.md)
+  * [tools.md](./doc/godoc/tools.md)
+  * [util.md](./doc/godoc/util.md)
 * スクリプト
   * [doc-template-generator.go](./tools/doc-template-generator.go)
 * テンプレートファイル
