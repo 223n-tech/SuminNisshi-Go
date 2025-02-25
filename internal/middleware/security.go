@@ -1,5 +1,8 @@
-// This file contains the security middleware for the application.
+// Package middleware provides security-related middleware.
 package middleware
+
+// internal/middleware/security.go
+// securityは、セキュリティ関連のミドルウェアを提供します
 
 import (
 	"context"
@@ -8,7 +11,7 @@ import (
 )
 
 /*
-	SecurityHeaders はセキュリティヘッダを追加します
+	はセキュリティヘッダーを追加します
 */
 func SecurityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +28,7 @@ func SecurityHeaders(next http.Handler) http.Handler {
 }
 
 /*
-	Timeout はリクエストのタイムアウトを設定します
+	はリクエストのタイムアウトを設定します
 */
 func Timeout(timeout time.Duration) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/go-sql-driver/mysql v1.9.0
 	github.com/signintech/gopdf v0.29.2
+	golang.org/x/crypto v0.33.0
 )
 
 require (

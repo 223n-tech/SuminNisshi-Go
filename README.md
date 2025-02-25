@@ -2,16 +2,16 @@
 
 簡単に言えば、[SuiminNisshi](https://github.com/223n-tech/SuminNisshi)のGo言語版です。
 
-## はじめに
+## 1. はじめに
 
 このREADME内の各種コマンドは、devcontainer環境下で実行した場合です。
 
-## 注意
+## 2. 注意
 
 まだ、ページは **ハリボテの見た目** しか作成していません。
 具体的な実装は、未実装なので注意してください。
 
-## ページ
+## 3. ページ
 
 | handler             | アドレス                                                                  | ページ名                     | 役割 | モック実装 | 処理実装 |
 | ------------------- | ------------------------------------------------------------------------- | ---------------------------- | ---- | :--------: | :------: |
@@ -42,27 +42,51 @@
 | statistics.go       | [/statistics/data](http://localhost:8080/statistics/data)                 | 統計情報ページ               |      |     x      |    x     |
 | terms.go            | [/terms](http://localhost:8080/terms)                                     | 利用規約ページ               |      |     x      |    x     |
 
-## 基本コマンド
+### 3-1. ルート設定について
 
-### ホストの起動
+パスルートの設定は、[internal/handler](./internal/handler/)にある各ハンドラー内で定義している`RegisterRoutes`関数で設定しています。
+
+## 4. 基本コマンド
+
+`make`コマンドで実行している詳細については、[Makefileファイル](./Makefile)を参照してください。
+
+### 4-1. ホストの起動
 
 ```bash
-go run cmd/suiminnisshi/main.go
+make run
 ```
 
-### ホストの終了
+### 4-2. ホストの終了
 
 ホストの起動中に、Ctrl+Cで終了させることができます。
 
-### AdminLTEの再セットアップ
+### 4-3. AdminLTEの再セットアップ
 
 ```bash
-bash /usr/local/bin/setup-adminlte.sh
+make mod.install.adminlte
 ```
 
-## devcontainer環境
+### 4-4. ツールのインストール
 
-### APP
+```bash
+make tools.get
+```
+
+### 4-5. ドキュメントの生成
+
+```bash
+make tools.doc
+```
+
+### 4-6. lintの実行
+
+```bash
+make lint
+```
+
+## 5. devcontainer環境
+
+### 5-1. APP
 
 * image: [debian:bookworm-slim](https://hub.docker.com/_/debian)
 * OS: [Debian bookworm](https://www.debian.org/releases/bookworm/)
@@ -70,7 +94,7 @@ bash /usr/local/bin/setup-adminlte.sh
 * 環境変数管理: [direnv](https://github.com/direnv/direnv)
 * テンプレート: [AdminLTE](https://adminlte.io/)
 
-### DB
+### 5-2. DB
 
 * image: [mariadb:latest](https://hub.docker.com/_/mariadb)
 * DB: [MariaDB](https://mariadb.org/)
@@ -80,29 +104,38 @@ bash /usr/local/bin/setup-adminlte.sh
   * DB_PASSWORD = suiminnisshi_password
   * DB_NAME = suiminnisshi
 
-### ポート転送
+### 5-3. ポート転送
 
 * 8080: アプリケーションポート
 * 3306: MariaDBポート
 
-## 開発メモ
+## 6. 開発メモ
 
-### godocについて
+### 6-1. ドキュメントについて
 
-godocコマンドで、ドキュメントページにアクセスすることが可能です。
-internalディレクトリ以下のモジュールは、対象外です。
+makeコマンドで、ドキュメントファイルの自動生成が可能です。
+生成したファイルは、[doc/godocディレクトリ](./doc/godoc/)に保存されています。
 
 ```bash
-godoc
+make tools.doc
 ```
 
-### .envrcファイルについて
+* 生成ファイル
+  * [cmd.md](./doc/godoc/cmd.md)
+  * [config.md](./doc/godoc/config.md)
+  * [handler.md](./doc/godoc/handler.md)
+* スクリプト
+  * [doc-template-generator.go](./tools/doc-template-generator.go)
+* テンプレートファイル
+  * [package-template.md](./doc/godoc/package-template.md)
 
-* `.envrc`ファイルが存在しない場合、devcontainerビルド時にテンプレートファイルから自動生成されます。
-  * テンプレートファイルは、 `.devcontainer/.envrc.template` です。
-* すでに`.envrc`ファイルが存在する場合、自動生成されません。
+### 6-2. .envrcファイルについて
 
-### ターミナルを起動するとdirenvのエラーが表示される
+* ルートフォルダーに`.envrc`ファイルが存在しない場合、devcontainerビルド時にテンプレートファイルから自動生成されます。
+  * テンプレートファイルは、 [.devcontainer/.envrc.template](./.devcontainer/.envrc.template) です。
+* すでに、ルートフォルダーに`.envrc`ファイルが存在する場合、自動生成されません。
+
+### 6-3. ターミナルを起動するとdirenvのエラーが表示される
 
 `.envrc`ファイルの読み込みを有効にしてください。
 
@@ -110,7 +143,7 @@ godoc
 direnv allow
 ```
 
-### 新しくページを追加したい
+### 6-4. 新しくページを追加したい
 
 1. `web/template/pages`ディレクトリに作成したいページ名のhtmlファイルを作成する。
 2. ページは基本レイアウトを継承して必要なコンテンツブロックを実装します。

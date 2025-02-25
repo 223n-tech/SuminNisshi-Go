@@ -1,5 +1,8 @@
-// ルーターのラッパー構造体を提供します
+// Package handler provides HTTP handlers for the application.
 package handler
+
+// internal/handler/router.go
+// routerは、ルーターのラッパー構造体を提供します
 
 import (
 	"net/http"
@@ -8,42 +11,42 @@ import (
 )
 
 /*
-	RouterWrapper はchi.Routerのラッパーです
+	chi.Routerのラッパーです
 */
 type RouterWrapper struct {
 	chi.Router
 }
 
 /*
-	NewRouter は新しいRouterWrapperを作成します
+	新しいRouterWrapperを作成します
 */
 func NewRouter(r chi.Router) *RouterWrapper {
 	return &RouterWrapper{Router: r}
 }
 
 /*
-	Get はGETリクエストを処理するハンドラを登録します
+	グループを作成します
 */
-func (r *RouterWrapper) Group(pattern string, fn func(r chi.Router)) chi.Router {
+func (r *RouterWrapper) Group(_ string, fn func(r chi.Router)) chi.Router {
 	return r.Router.Group(fn)
 }
 
 /*
-	Get はGETリクエストを処理するハンドラを登録します
+	静的ファイルを提供します
 */
 func (r *RouterWrapper) Static(prefix string, root http.FileSystem) {
 	r.Router.Handle(prefix+"/*", http.StripPrefix(prefix, http.FileServer(root)))
 }
 
 /*
-	Get はGETリクエストを処理するハンドラを登録します
+	サブルーターを作成します
 */
-func (r *RouterWrapper) SubRouter(prefix string) *RouterWrapper {
+func (r *RouterWrapper) SubRouter(_ string) *RouterWrapper {
 	return NewRouter(chi.NewRouter())
 }
 
 /*
-	WithMiddleware は指定されたミドルウェアを適用した新しいRouterWrapperを返します
+	指定されたミドルウェアを適用した新しいRouterWrapperを返します
 */
 func (r *RouterWrapper) WithMiddleware(middlewares ...func(http.Handler) http.Handler) *RouterWrapper {
 	router := chi.NewRouter()

@@ -1,65 +1,36 @@
-// 睡眠記録画面のハンドラーを定義
+// Package handler provides HTTP handlers for the application.
 package handler
 
+// internal/handler/sleep_records.go
+// sleep_recordsは、睡眠記録関連のハンドラーを提供します。
+
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
+	"github.com/223n-tech/SuiminNisshi-Go/internal/models"
+	"github.com/223n-tech/SuiminNisshi-Go/internal/service"
+	"github.com/223n-tech/SuiminNisshi-Go/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 
-/*
-	SleepRecordHandler 睡眠記録関連のハンドラ
-*/
+// 睡眠記録関連のハンドラー
 type SleepRecordHandler struct {
 	templates *TemplateManager
+	service   *service.Service
 }
 
-/*
-	SleepRecord 睡眠記録の構造体
-*/
-type SleepRecord struct {
-	ID             int64
-	Date           time.Time
-	BedTime        string
-	WakeTime       string
-	Duration       float64
-	Score          int
-	Quality        string
-	ScoreColorClass string
-	Notes          string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-}
-
-/*
-	SleepRecordFilter 睡眠記録のフィルター条件
-*/
-type SleepRecordFilter struct {
-	StartDate    time.Time `json:"startDate"`
-	EndDate      time.Time `json:"endDate"`
-	DurationFrom float64   `json:"durationFrom"`
-	DurationTo   float64   `json:"durationTo"`
-	ScoreFrom    int       `json:"scoreFrom"`
-	ScoreTo      int       `json:"scoreTo"`
-	SortBy       string    `json:"sortBy"`
-	SortOrder    string    `json:"sortOrder"`
-}
-
-/*
-	NewSleepRecordHandler は SleepRecordHandler を作成します。
-*/
-func NewSleepRecordHandler(templates *TemplateManager) *SleepRecordHandler {
+// SleepRecordHandlerを作成
+func NewSleepRecordHandler(templates *TemplateManager, svc *service.Service) *SleepRecordHandler {
 	return &SleepRecordHandler{
 		templates: templates,
+		service:   svc,
 	}
 }
 
-/*
-	RegisterRoutes ルーティングを登録
-*/
+// ルーティングを登録
 func (h *SleepRecordHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/sleep-records", h.List)
 	r.Get("/sleep-records/new", h.New)
@@ -74,107 +45,139 @@ func (h *SleepRecordHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/api/sleep-records/filter", h.FilterAPI)
 }
 
-/*
-	List 睡眠記録一覧の表示
-*/
+// 睡眠記録一覧の表示
 func (h *SleepRecordHandler) List(w http.ResponseWriter, r *http.Request) {
-	// TODO: データベースから実際のデータを取得
-	records := []SleepRecord{
-		{
-			ID:              1,
-			Date:            time.Now().AddDate(0, 0, -1),
-			BedTime:         "23:00",
-			WakeTime:        "6:30",
-			Duration:        7.5,
-			Score:           85,
-			Quality:         "良好",
-			ScoreColorClass: "bg-success",
-			Notes:           "よく眠れた",
-		},
-		{
-			ID:              2,
-			Date:            time.Now().AddDate(0, 0, -2),
-			BedTime:         "23:30",
-			WakeTime:        "6:45",
-			Duration:        7.25,
-			Score:           75,
-			Quality:         "普通",
-			ScoreColorClass: "bg-warning",
-			Notes:           "途中で目が覚めた",
-		},
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
+
+	// 睡眠状態のマスターデータを取得
+	states, err := h.service.Record().GetStatesList(r.Context())
+	if err != nil {
+		http.Error(w, "睡眠状態の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	// 食事種別のマスターデータを取得
+	mealTypes, err := h.service.Record().GetMealTypesList(r.Context())
+	if err != nil {
+		http.Error(w, "食事種別の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	// デフォルトの期間を設定（直近7日間）
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, 0, -7)
+
+	// 睡眠記録の取得
+	records, err := h.service.Record().GetRecordsByDateRange(r.Context(), userID, startDate, endDate)
+	if err != nil {
+		http.Error(w, "睡眠記録の取得に失敗しました", http.StatusInternalServerError)
+		return
 	}
 
 	data := &TemplateData{
 		Title:      "睡眠記録一覧",
 		ActiveMenu: "sleep-records",
 		Data: map[string]interface{}{
-			"Records": records,
+			"Records":    records,
+			"States":     states,
+			"MealTypes":  mealTypes,
+			"StartDate":  startDate.Format("2006-01-02"),
+			"EndDate":    endDate.Format("2006-01-02"),
 		},
 	}
 
-	err := h.templates.Render(w, "sleep-records.html", data)
+	err = h.templates.Render(w, "sleep-records.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-/*
-	New 新規記録の作成
-*/
+// 新規記録画面を表示
 func (h *SleepRecordHandler) New(w http.ResponseWriter, r *http.Request) {
+	states, err := h.service.Record().GetStatesList(r.Context())
+	if err != nil {
+		http.Error(w, "睡眠状態の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	mealTypes, err := h.service.Record().GetMealTypesList(r.Context())
+	if err != nil {
+		http.Error(w, "食事種別の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
 	data := &TemplateData{
 		Title:      "睡眠記録の作成",
 		ActiveMenu: "sleep-records",
 		Data: map[string]interface{}{
-			"Record": &SleepRecord{
-				Date: time.Now(), // 現在の日付をデフォルト値として設定
+			"States":     states,
+			"MealTypes":  mealTypes,
+			"Record": &models.SleepRecord{
+				RecordDate: time.Now(),
 			},
 		},
 	}
 
-	err := h.templates.Render(w, "sleep-records-form.html", data)
+	err = h.templates.Render(w, "sleep-records-form.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-/*
-	Create 記録の作成
-*/
+// 新規記録の作成
 func (h *SleepRecordHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: バリデーションと保存処理の実装
+	// フォームデータの取得と変換
+	record := &models.SleepRecord{
+		RecordDate:   util.ParseDate(r.FormValue("record_date")),
+		TimeSlot:     util.ParseTime(r.FormValue("time_slot")),
+		SleepStateID: util.ParseInt64(r.FormValue("sleep_state_id")),
+		RecordType:   r.FormValue("record_type"),
+		Note:         sql.NullString{String: r.FormValue("note"), Valid: true},
+	}
+
+	// 食事種別IDの設定（設定されている場合）
+	if mealTypeID := r.FormValue("meal_type_id"); mealTypeID != "" {
+		record.MealTypeID = sql.NullInt64{
+			Int64: util.ParseInt64(mealTypeID),
+			Valid: true,
+		}
+	}
+
+	// 記録の作成
+	err := h.service.Record().CreateRecord(r.Context(), record)
+	if err != nil {
+		http.Error(w, "睡眠記録の作成に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
 	http.Redirect(w, r, "/sleep-records", http.StatusSeeOther)
 }
 
-/*
-	Show 記録の詳細表示
-*/
+// 記録の詳細表示
 func (h *SleepRecordHandler) Show(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	recordID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
+	id := util.ParseInt64(chi.URLParam(r, "id"))
+	if id == 0 {
 		http.Error(w, "無効なID", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: データベースから記録を取得
-	record := &SleepRecord{
-		ID:              recordID,
-		Date:            time.Now(),
-		BedTime:         "23:00",
-		WakeTime:        "6:30",
-		Duration:        7.5,
-		Score:           85,
-		Quality:         "良好",
-		ScoreColorClass: "bg-success",
-		Notes:           "よく眠れた",
+	record, err := h.service.Record().GetRecordWithRelations(r.Context(), id)
+	if err != nil {
+		http.Error(w, "睡眠記録の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	if record == nil {
+		http.Error(w, "記録が見つかりません", http.StatusNotFound)
+		return
 	}
 
 	data := &TemplateData{
@@ -192,29 +195,39 @@ func (h *SleepRecordHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-	Edit 記録の編集
-*/
+// 記録の編集画面を表示
 func (h *SleepRecordHandler) Edit(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	recordID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
+	id := util.ParseInt64(chi.URLParam(r, "id"))
+	if id == 0 {
 		http.Error(w, "無効なID", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: データベースから記録を取得
-	record := &SleepRecord{
-		ID:       recordID,
-		BedTime:  "23:00",
-		WakeTime: "6:30",
+	record, err := h.service.Record().GetRecordWithRelations(r.Context(), id)
+	if err != nil {
+		http.Error(w, "睡眠記録の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	states, err := h.service.Record().GetStatesList(r.Context())
+	if err != nil {
+		http.Error(w, "睡眠状態の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	mealTypes, err := h.service.Record().GetMealTypesList(r.Context())
+	if err != nil {
+		http.Error(w, "食事種別の取得に失敗しました", http.StatusInternalServerError)
+		return
 	}
 
 	data := &TemplateData{
 		Title:      "睡眠記録の編集",
 		ActiveMenu: "sleep-records",
 		Data: map[string]interface{}{
-			"Record": record,
+			"Record":     record,
+			"States":     states,
+			"MealTypes":  mealTypes,
 		},
 	}
 
@@ -225,78 +238,112 @@ func (h *SleepRecordHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-	Update 記録の更新
-*/
+// 記録の更新
 func (h *SleepRecordHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	_, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		http.Error(w, "無効なID", http.StatusBadRequest)
-		return
-	}
+    if err := r.ParseForm(); err != nil {
+        http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
+        return
+    }
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
-		return
-	}
+    id := util.ParseInt64(chi.URLParam(r, "id"))
+    if id == 0 {
+        http.Error(w, "無効なID", http.StatusBadRequest)
+        return
+    }
 
-	// TODO: バリデーションと更新処理の実装
-	http.Redirect(w, r, "/sleep-records", http.StatusSeeOther)
+    // 既存の記録を取得
+	/*
+    recordWithRelations, err := h.service.Record().GetRecordWithRelations(r.Context(), id)
+    if err != nil {
+        http.Error(w, "睡眠記録の取得に失敗しました", http.StatusInternalServerError)
+        return
+    }
+	*/
+
+    // SleepRecord型の新しい変数を作成
+    updatedRecord := &models.SleepRecord{
+        ID:           id,
+        RecordDate:   util.ParseDate(r.FormValue("record_date")),
+        TimeSlot:     util.ParseTime(r.FormValue("time_slot")),
+        SleepStateID: util.ParseInt64(r.FormValue("sleep_state_id")),
+        RecordType:   r.FormValue("record_type"),
+        Note:         sql.NullString{String: r.FormValue("note"), Valid: true},
+    }
+
+    if mealTypeID := r.FormValue("meal_type_id"); mealTypeID != "" {
+        updatedRecord.MealTypeID = sql.NullInt64{
+            Int64: util.ParseInt64(mealTypeID),
+            Valid: true,
+        }
+    }
+
+    // 記録の更新
+    err := h.service.Record().UpdateRecord(r.Context(), updatedRecord)
+    if err != nil {
+        http.Error(w, "睡眠記録の更新に失敗しました", http.StatusInternalServerError)
+        return
+    }
+
+    http.Redirect(w, r, "/sleep-records", http.StatusSeeOther)
 }
 
-/*
-	Delete 記録の削除
-*/
+// 記録の削除
 func (h *SleepRecordHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	_, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
+	id := util.ParseInt64(chi.URLParam(r, "id"))
+	if id == 0 {
 		http.Error(w, "無効なID", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: 削除処理の実装
+	err := h.service.Record().DeleteRecord(r.Context(), id)
+	if err != nil {
+		http.Error(w, "睡眠記録の削除に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
-/*
-	ListAPI 睡眠記録一覧の取得
-*/
+// 睡眠記録一覧のAPI
 func (h *SleepRecordHandler) ListAPI(w http.ResponseWriter, r *http.Request) {
-	// TODO: データベースからデータを取得
-	records := []SleepRecord{
-		{
-			ID:       1,
-			BedTime:  "23:00",
-			WakeTime: "6:30",
-		},
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
+
+	startDate := time.Now().AddDate(0, 0, -30)
+	endDate := time.Now()
+
+	records, err := h.service.Record().GetRecordsByDateRange(r.Context(), userID, startDate, endDate)
+	if err != nil {
+		http.Error(w, "睡眠記録の取得に失敗しました", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(records)
 }
 
-/*
-	FilterAPI 睡眠記録のフィルタリング
-*/
+// 睡眠記録のフィルターリングAPI
 func (h *SleepRecordHandler) FilterAPI(w http.ResponseWriter, r *http.Request) {
-	var filter SleepRecordFilter
+	var filter service.SleepRecordFilter
 	if err := json.NewDecoder(r.Body).Decode(&filter); err != nil {
 		http.Error(w, "無効なフィルター条件", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: フィルター条件に基づくデータ取得の実装
-	records := []SleepRecord{}
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
+
+	records, err := h.service.Record().FilterRecords(r.Context(), userID, filter)
+	if err != nil {
+		http.Error(w, "睡眠記録のフィルターリングに失敗しました", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(records)
 }
 
-/*
-	getScoreColorClass 睡眠スコアに応じた色のクラスを取得
-*/
+// 睡眠スコアに応じた色のクラスを取得
 func getScoreColorClass(score int) string {
 	switch {
 	case score >= 90:
@@ -308,4 +355,40 @@ func getScoreColorClass(score int) string {
 	default:
 		return "bg-danger"
 	}
+}
+
+// 時間範囲の妥当性をチェック
+func validateTimeRange(startTime, endTime time.Time) error {
+	if startTime.After(endTime) {
+		return service.ErrInvalidTimeRange
+	}
+
+	duration := endTime.Sub(startTime)
+	if duration > 24*time.Hour {
+		return service.ErrTimeRangeTooLong
+	}
+
+	return nil
+}
+
+
+// 睡眠記録のバリデーション
+func validateSleepRecord(record *models.SleepRecord) error {
+	if record.RecordDate.IsZero() {
+		return service.ErrInvalidDate
+	}
+
+	if record.TimeSlot.IsZero() {
+		return service.ErrInvalidTimeSlot
+	}
+
+	if record.SleepStateID == 0 {
+		return service.ErrInvalidSleepState
+	}
+
+	if record.RecordType == "" {
+		return service.ErrInvalidRecordType
+	}
+
+	return nil
 }

@@ -1,70 +1,86 @@
-// デーカプリングのためのリポジトリ層の構造体とインターフェースを定義
+// internal/repository/repository.go
+// このパッケージは、データベースの操作を行うためのインターフェイスを提供します。
+// これにより、データベースの実装を変更する際に、コードの変更を最小限に抑えることができます。
+
+// Package repository provides interfaces for abstracting database operations.
 package repository
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
 
-	"github.com/223n-tech/SuiminNisshi-Go/internal/config"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/223n-tech/SuiminNisshi-Go/internal/models"
 )
 
-/*
-	RepositoryInterface リポジトリのインターフェース
-*/
-type RepositoryInterface interface {
-	Close() error
-	// TODO: 他のリポジトリメソッドを追加
+// 全リポジトリのインターフェイス
+type Repository interface {
+	// サブリポジトリの取得
+	User() UserRepository
+	SleepDiary() SleepDiaryRepository
+	SleepRecord() SleepRecordRepository
+	SleepState() SleepStateRepository
+	MealType() MealTypeRepository
+	UserSleepPreference() UserSleepPreferenceRepository
+	// トランザクション
+	Transaction(ctx context.Context, fn func(Repository) error) error
 }
 
-/*
-	Repository リポジトリの構造体
-*/
-type Repository struct {
-	db *sql.DB
+// ユーザー情報のリポジトリーインターフェイス
+type UserRepository interface {
+	GetByID(ctx context.Context, id int64) (*models.User, error)
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	Create(ctx context.Context, user *models.User) error
+	Update(ctx context.Context, user *models.User) error
+	Delete(ctx context.Context, id int64) error
+	UpdateLastLogin(ctx context.Context, id int64) error
 }
 
-/*
-	NewDB データベース接続を作成
-*/
-func NewDB(cfg config.DatabaseConfig) (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci",
-		cfg.User,
-		cfg.Password,
-		cfg.Host,
-		cfg.Port,
-		cfg.DBName,
-	)
-
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
-	}
-
-	// 接続テスト
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	// コネクションプールの設定
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(25)
-
-	return db, nil
+// 睡眠日誌のリポジトリーインターフェイス
+type SleepDiaryRepository interface {
+	GetByID(ctx context.Context, id int64) (*models.SleepDiary, error)
+	GetByUserID(ctx context.Context, userID int64) ([]*models.SleepDiary, error)
+	GetByDateRange(ctx context.Context, userID int64, startDate, endDate string) ([]*models.SleepDiary, error)
+	Create(ctx context.Context, diary *models.SleepDiary) error
+	Update(ctx context.Context, diary *models.SleepDiary) error
+	Delete(ctx context.Context, id int64) error
 }
 
-/*
-	NewRepository リポジトリを作成
-*/
-func NewRepository(db *sql.DB) RepositoryInterface {
-	return &Repository{
-		db: db,
-	}
+// 睡眠記録のリポジトリーインターフェイス
+type SleepRecordRepository interface {
+	GetByID(ctx context.Context, id int64) (*models.SleepRecord, error)
+	GetByDiaryID(ctx context.Context, diaryID int64) ([]*models.SleepRecord, error)
+	GetByDateRange(ctx context.Context, diaryID int64, startDate, endDate string) ([]*models.SleepRecord, error)
+	GetWithRelations(ctx context.Context, id int64) (*models.SleepRecordWithRelations, error)
+	Create(ctx context.Context, record *models.SleepRecord) error
+	Update(ctx context.Context, record *models.SleepRecord) error
+	Delete(ctx context.Context, id int64) error
+	BulkCreate(ctx context.Context, records []*models.SleepRecord) error
 }
 
-/*
-	Close データベース接続をクローズ
-*/
-func (r *Repository) Close() error {
-	return r.db.Close()
+// 睡眠状態のリポジトリーインターフェイス
+type SleepStateRepository interface {
+	GetByID(ctx context.Context, id int64) (*models.SleepState, error)
+	GetAll(ctx context.Context) ([]*models.SleepState, error)
+	GetByCode(ctx context.Context, code string) (*models.SleepState, error)
+	Create(ctx context.Context, state *models.SleepState) error
+	Update(ctx context.Context, state *models.SleepState) error
+	Delete(ctx context.Context, id int64) error
+}
+
+// 食事種別のリポジトリーインターフェイス
+type MealTypeRepository interface {
+	GetByID(ctx context.Context, id int64) (*models.MealType, error)
+	GetAll(ctx context.Context) ([]*models.MealType, error)
+	GetByCode(ctx context.Context, code string) (*models.MealType, error)
+	Create(ctx context.Context, mealType *models.MealType) error
+	Update(ctx context.Context, mealType *models.MealType) error
+	Delete(ctx context.Context, id int64) error
+}
+
+// ユーザー睡眠設定のリポジトリーインターフェイス
+type UserSleepPreferenceRepository interface {
+	GetByUserID(ctx context.Context, userID int64) (*models.UserSleepPreference, error)
+	Create(ctx context.Context, pref *models.UserSleepPreference) error
+	Update(ctx context.Context, pref *models.UserSleepPreference) error
+	Delete(ctx context.Context, userID int64) error
+	GetDefaultPreference(userID int64) *models.UserSleepPreference
 }

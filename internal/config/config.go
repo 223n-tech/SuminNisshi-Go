@@ -1,4 +1,7 @@
-// アプリケーション全体の設定を保持する構造体を定義する
+// internal/config/config.go
+// configは、アプリケーション全体の設定を保持する構造体を定義しています。
+
+// Package config provides a structure to hold the application-wide configuration.
 package config
 
 import (
@@ -7,7 +10,7 @@ import (
 )
 
 /*
-	Config アプリケーション全体の設定を保持する構造体
+	アプリケーション全体の設定を保持する構造体
 */
 type Config struct {
 	Server   ServerConfig
@@ -15,7 +18,7 @@ type Config struct {
 }
 
 /*
-	ServerConfig サーバー関連の設定
+	サーバー関連の設定
 */
 type ServerConfig struct {
 	Port    int
@@ -24,7 +27,7 @@ type ServerConfig struct {
 }
 
 /*
-	DatabaseConfig データベース関連の設定
+	データベース関連の設定
 */
 type DatabaseConfig struct {
 	Host     string
@@ -35,7 +38,7 @@ type DatabaseConfig struct {
 }
 
 /*
-	Load 環境変数から設定を読み込む
+	環境変数から設定を読み込む
 */
 func Load() (*Config, error) {
 	cfg := &Config{
@@ -57,7 +60,7 @@ func Load() (*Config, error) {
 }
 
 /*
-	getEnvStr 環境変数から文字列を取得
+	環境変数から文字列を取得
 */
 func getEnvStr(key string, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
@@ -67,7 +70,7 @@ func getEnvStr(key string, defaultValue string) string {
 }
 
 /*
-	getEnvInt 環境変数から整数を取得
+	環境変数から整数を取得
 */
 func getEnvInt(key string, defaultValue int) int {
 	if value, exists := os.LookupEnv(key); exists {

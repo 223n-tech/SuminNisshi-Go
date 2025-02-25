@@ -1,150 +1,152 @@
-// 統計情報画面のハンドラーを定義
+// Package handler provides HTTP handlers for the application.
 package handler
+
+// internal/handler/statistics.go
+// statisticsは、統計情報画面のハンドラーを実装しています。
+// 統計情報画面は、睡眠記録の統計情報を表示する画面です。
+// 統計情報は、睡眠時間やスコアの平均値、スコアの分布、月間のサマリーなどを表示します。
 
 import (
 	"encoding/json"
 	"net/http"
 	"time"
 
+	"github.com/223n-tech/SuiminNisshi-Go/internal/service"
 	"github.com/go-chi/chi/v5"
 )
 
-/*
-	StatisticsHandler 統計情報関連のハンドラ
-*/
+// 統計情報関連のハンドラー
 type StatisticsHandler struct {
 	templates *TemplateManager
+	service   *service.Service
 }
 
-/*
-	StatisticsData 統計データの構造体
-*/
-type StatisticsData struct {
-	StartDate       time.Time              `json:"startDate"`
-	EndDate         time.Time              `json:"endDate"`
-	SleepTimes      []SleepTimeData        `json:"sleepTimes"`
-	ScoreDistrib    []ScoreDistribution    `json:"scoreDistribution"`
-	WeekdayAverages []WeekdayAverageData   `json:"weekdayAverages"`
-	MonthlySummary  MonthlySummaryData     `json:"monthlySummary"`
-}
-
-/*
-	SleepTimeData 睡眠時間データ
-*/
-type SleepTimeData struct {
-	Date      time.Time `json:"date"`
-	Duration  float64   `json:"duration"`    // 睡眠時間（時間）
-	BedTime   string    `json:"bedTime"`     // 就寝時刻
-	WakeTime  string    `json:"wakeTime"`    // 起床時刻
-	Score     int       `json:"score"`       // 睡眠スコア
-}
-
-/*
-	ScoreDistribution スコア分布データ
-*/
-type ScoreDistribution struct {
-	Range string `json:"range"`  // スコア範囲（例: "60-69"）
-	Count int    `json:"count"`  // 該当する記録の数
-}
-
-/*
-	WeekdayAverageData 曜日ごとの平均データ
-*/
-type WeekdayAverageData struct {
-	Weekday       string  `json:"weekday"`      // 曜日
-	AvgDuration   float64 `json:"avgDuration"`  // 平均睡眠時間
-	AvgScore      float64 `json:"avgScore"`     // 平均スコア
-}
-
-/*
-	MonthlySummaryData 月間サマリーデータ
-*/
-type MonthlySummaryData struct {
-	AvgDuration    float64 `json:"avgDuration"`     // 平均睡眠時間
-	AvgScore       float64 `json:"avgScore"`        // 平均スコア
-	AvgBedTime     string  `json:"avgBedTime"`      // 平均就寝時刻
-	AvgWakeTime    string  `json:"avgWakeTime"`     // 平均起床時刻
-	DurationChange float64 `json:"durationChange"`   // 前月比（睡眠時間）
-	ScoreChange    float64 `json:"scoreChange"`      // 前月比（スコア）
-}
-
-/*
-	NewStatisticsHandler は StatisticsHandler を作成します。
-*/
-func NewStatisticsHandler(templates *TemplateManager) *StatisticsHandler {
+// StatisticsHandlerを作成
+func NewStatisticsHandler(templates *TemplateManager, svc *service.Service) *StatisticsHandler {
 	return &StatisticsHandler{
 		templates: templates,
+		service:   svc,
 	}
 }
 
-/*
-	RegisterRoutes ルーティングを登録
-*/
+// ルーティングを登録
 func (h *StatisticsHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/statistics", h.Statistics)
 	r.Get("/api/statistics/data", h.GetStatisticsData)
+	r.Get("/api/statistics/weekly", h.GetWeeklyStats)
+	r.Get("/api/statistics/monthly", h.GetMonthlyStats)
 }
 
-/*
-	Statistics 統計情報画面を表示
-*/
+// 統計情報画面を表示
 func (h *StatisticsHandler) Statistics(w http.ResponseWriter, r *http.Request) {
+	// ユーザー情報の取得
+	userCtx := r.Context().Value(UserKey)
+	if userCtx == nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
+
+	// デフォルトの期間を設定（直近30日）
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, 0, -30)
+
+	// 睡眠設定の取得
+	pref, err := h.service.User().GetSleepPreference(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "睡眠設定の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
 	data := &TemplateData{
 		Title:      "統計情報",
 		ActiveMenu: "statistics",
+		Data: map[string]interface{}{
+			"StartDate":    startDate.Format("2006-01-02"),
+			"EndDate":      endDate.Format("2006-01-02"),
+			"Preferences": pref,
+		},
 	}
 
-	err := h.templates.Render(w, "statistics.html", data)
+	err = h.templates.Render(w, "statistics.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-/*
-	GetStatisticsData 統計データを取得
-*/
+// 統計データを取得
 func (h *StatisticsHandler) GetStatisticsData(w http.ResponseWriter, r *http.Request) {
-	// クエリパラメータから期間を取得
-	// TODO: 期間に基づくデータ取得の実装
-	_ = r.URL.Query().Get("start")
-	_ = r.URL.Query().Get("end")
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
 
-	// TODO: 実際のデータベースからデータを取得
-	// ここではサンプルデータを返す
-	data := StatisticsData{
-		SleepTimes: []SleepTimeData{
-			{
-				Date:     time.Now().AddDate(0, 0, -1),
-				Duration: 7.5,
-				BedTime:  "23:00",
-				WakeTime: "06:30",
-				Score:    85,
-			},
-			// 他のデータ...
-		},
-		ScoreDistrib: []ScoreDistribution{
-			{Range: "90-100", Count: 3},
-			{Range: "80-89", Count: 12},
-			{Range: "70-79", Count: 8},
-			{Range: "60-69", Count: 5},
-			{Range: "0-59", Count: 2},
-		},
-		WeekdayAverages: []WeekdayAverageData{
-			{Weekday: "月", AvgDuration: 7.2, AvgScore: 82},
-			{Weekday: "火", AvgDuration: 7.0, AvgScore: 80},
-			// 他の曜日...
-		},
-		MonthlySummary: MonthlySummaryData{
-			AvgDuration:    7.2,
-			AvgScore:       85,
-			AvgBedTime:     "23:30",
-			AvgWakeTime:    "06:45",
-			DurationChange: 0.3,
-			ScoreChange:    2.0,
-		},
+	// クエリパラメータから期間を取得
+	startDate := r.URL.Query().Get("start")
+	endDate := r.URL.Query().Get("end")
+
+	// 期間のバリデーション
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		http.Error(w, "無効な開始日", http.StatusBadRequest)
+		return
 	}
 
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		http.Error(w, "無効な終了日", http.StatusBadRequest)
+		return
+	}
+
+	// 統計データの取得
+	stats, err := h.service.Record().GetStatistics(r.Context(), userID, start, end)
+	if err != nil {
+		http.Error(w, "統計データの取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	// JSONレスポンスを返す
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	json.NewEncoder(w).Encode(stats)
+}
+
+// 週間統計を取得
+func (h *StatisticsHandler) GetWeeklyStats(w http.ResponseWriter, r *http.Request) {
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
+
+	// 直近の週間統計を取得
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, 0, -7)
+
+	stats, err := h.service.Record().GetWeeklyStats(r.Context(), userID, startDate, endDate)
+	if err != nil {
+		http.Error(w, "週間統計の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	// JSONレスポンスを返す
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+// 月間統計を取得
+func (h *StatisticsHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Request) {
+	// TODO: 実際のユーザーIDを使用
+	var userID int64 = 1 // 開発用
+
+	// 直近の月間統計を取得
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, -1, 0)
+
+	stats, err := h.service.Record().GetMonthlyStats(r.Context(), userID, startDate, endDate)
+	if err != nil {
+		http.Error(w, "月間統計の取得に失敗しました", http.StatusInternalServerError)
+		return
+	}
+
+	// JSONレスポンスを返す
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
 }

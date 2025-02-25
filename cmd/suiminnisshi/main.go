@@ -1,4 +1,8 @@
-// main.go は SuiminNisshi のエントリーポイントです。このファイルは、サーバーの初期化、設定の読み込み、データベース接続、ルーターの設定、ハンドラーの登録、サーバーの起動、グレースフルシャットダウンを行います。
+// cmd/suiminnisshi/main.go
+// mainは、SuiminNisshiのエントリーポイントです。
+// このファイルは、サーバーの初期化、設定の読み込み、データベース接続、ルーターの設定、ハンドラーの登録、サーバーの起動、グレースフルシャットダウンを行います。
+
+// Package main provides the entry point for SuiminNisshi.
 package main
 
 import (
@@ -14,7 +18,7 @@ import (
 	"github.com/223n-tech/SuiminNisshi-Go/internal/config"
 	"github.com/223n-tech/SuiminNisshi-Go/internal/handler"
 	"github.com/223n-tech/SuiminNisshi-Go/internal/middleware"
-	"github.com/223n-tech/SuiminNisshi-Go/internal/repository"
+	"github.com/223n-tech/SuiminNisshi-Go/internal/repository/mysql"
 	"github.com/223n-tech/SuiminNisshi-Go/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -22,7 +26,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-// main 関数は、サーバーの初期化、設定の読み込み、データベース接続、ルーターの設定、ハンドラーの登録、サーバーの起動、グレースフルシャットダウンを行います。
+// サーバーの初期化、設定の読み込み、データベース接続、ルーターの設定、ハンドラーの登録、サーバーの起動、グレースフルシャットダウンを行います。
 func main() {
 	// ロガーの初期化
 	logger := log.New(os.Stdout, "[SuiminNisshi] ", log.LstdFlags|log.Lshortfile)
@@ -37,26 +41,33 @@ func main() {
 
 	// データベース接続の初期化
 	logger.Printf("[Initialize] Connecting to database...")
-	db, err := repository.NewDB(cfg.Database)
+	dbConfig := mysql.DBConfig{
+		Host:     cfg.Database.Host,
+		Port:     cfg.Database.Port,
+		User:     cfg.Database.User,
+		Password: cfg.Database.Password,
+		DBName:   cfg.Database.DBName,
+	}
+	db, err := mysql.NewDB(dbConfig)
 	if err != nil {
 		logger.Fatalf("[NG] Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	// テンプレートマネージャーの初期化
-	logger.Printf("[Initialize] Loading templates...")
-	tm := handler.NewTemplateManager("web/views", nil)
-	if err := tm.LoadTemplates(); err != nil {
-		logger.Fatalf("[NG] Failed to load templates: %v", err)
-	}
-
 	// リポジトリの初期化
 	logger.Printf("[Initialize] Initializing repository...")
-	repo := repository.NewRepository(db)
+	repo := mysql.NewMySQLRepository(db)
 
 	// サービスの初期化
 	logger.Printf("[Initialize] Initializing service...")
-	svc := service.NewService(repo)
+	svc := service.NewService(repo, service.DebugLevel, logger)
+
+	// テンプレートマネージャーの初期化
+	logger.Printf("[Initialize] Loading templates...")
+	tm := handler.NewTemplateManager("web/views", nil, logger, svc)
+	if err := tm.LoadTemplates(); err != nil {
+		logger.Fatalf("[NG] Failed to load templates: %v", err)
+	}
 
 	// ルーターの設定
 	logger.Printf("[Initialize] Setting up router...")
@@ -93,12 +104,12 @@ func main() {
 
 	// サービスをハンドラーに渡す
 	logger.Printf("[Initialize] Passing service to handlers...")
-	authHandler := handler.NewAuthHandler(tm)
+	authHandler := handler.NewAuthHandler(tm, svc)
 	authHandler.RegisterRoutes(router)
 
 	// アカウント削除ハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering account deletion routes...")
-	accountDeletionHandler := handler.NewAccountDeletionHandler(tm)
+	accountDeletionHandler := handler.NewAccountDeletionHandler(tm, svc)
 	accountDeletionHandler.RegisterRoutes(r)
 
 	// ダッシュボードハンドラーの初期化と登録
@@ -108,48 +119,48 @@ func main() {
 
 	// エラーハンドラーの初期化
 	logger.Printf("[Initialize] Initializing error handler...")
-	errorHandler := handler.NewErrorHandlerWithTemplates(tm)
+	errorHandler := handler.NewErrorHandler(tm, svc, logger)
 	r.NotFound(errorHandler.Handle404)
 	r.MethodNotAllowed(errorHandler.Handle404)
 
 	// パスワードリセットハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering password reset routes...")	
-	passwordResetHandler := handler.NewPasswordResetHandler(tm)
+	passwordResetHandler := handler.NewPasswordResetHandler(tm, svc)
 	passwordResetHandler.RegisterRoutes(r)
 
 	// プライバシーポリシーハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering privacy policy routes...")
-	privacyPolicyHandler := handler.NewPrivacyHandler(tm)
+	privacyPolicyHandler := handler.NewPrivacyHandler(tm, svc)
 	privacyPolicyHandler.RegisterRoutes(r)
 
 	// プロフィールハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering profile routes...")
-	profileHandler := handler.NewProfileHandler(tm)
+	profileHandler := handler.NewProfileHandler(tm, svc)
 	profileHandler.RegisterRoutes(router)
 
 	// ユーザー登録ハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering registration routes...")
-	registrationHandler := handler.NewRegisterHandler(tm)
+	registrationHandler := handler.NewRegisterHandler(tm, svc)
 	registrationHandler.RegisterRoutes(r)
 
 	// 設定ハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering settings routes...")
-	settingsHandler := handler.NewSettingsHandler(tm)
+	settingsHandler := handler.NewSettingsHandler(tm, svc)
 	settingsHandler.RegisterRoutes(r)
 
 	// 睡眠記録ハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering sleep record routes...")
-	sleepRecordHandler := handler.NewSleepRecordHandler(tm)
+	sleepRecordHandler := handler.NewSleepRecordHandler(tm, svc)
 	sleepRecordHandler.RegisterRoutes(r)
 
 	// 統計情報ハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering statistics routes...")
-	statisticsHandler := handler.NewStatisticsHandler(tm)
+	statisticsHandler := handler.NewStatisticsHandler(tm, svc)
 	statisticsHandler.RegisterRoutes(r)
 
 	// 利用規約ハンドラーの初期化と登録
 	logger.Printf("[Initialize] Registering terms routes...")
-	termsHandler := handler.NewTermsHandler(tm)
+	termsHandler := handler.NewTermsHandler(tm, svc)
 	termsHandler.RegisterRoutes(r)
 
 	// サーバーの設定

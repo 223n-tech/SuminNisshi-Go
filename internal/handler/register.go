@@ -1,56 +1,61 @@
-// 新規登録画面のハンドラーを定義
+// Package handler provides HTTP handlers for the application.
 package handler
+
+// internal/handler/register.go
+// registerは、新規登録関連のハンドラーを提供します。
 
 import (
 	"fmt"
 	"net/http"
 	"regexp"
 
+	"github.com/223n-tech/SuiminNisshi-Go/internal/service"
 	"github.com/go-chi/chi/v5"
 )
 
-/*
-	RegisterHandler は新規登録画面のハンドラです。
-*/
+// 新規登録画面のハンドラー
 type RegisterHandler struct {
 	templates *TemplateManager
+	service   *service.Service
 }
 
-/*
-	RegisterData は新規登録画面のデータを保持します。
-*/
+// 新規登録画面のデータ
 type RegisterData struct {
 	Name                 string
 	Email                string
 	Password             string
 	PasswordConfirmation string
 	Terms                bool
-	Error               string
+	Error                string
 }
 
-/*
-	NewRegisterHandler は RegisterHandler を作成します。
-*/
-func NewRegisterHandler(templates *TemplateManager) *RegisterHandler {
+// RegisterHandlerを作成
+func NewRegisterHandler(templates *TemplateManager, svc *service.Service) *RegisterHandler {
 	return &RegisterHandler{
 		templates: templates,
+		service:   svc,
 	}
 }
 
-/*
-	RegisterRoutes はルーティングを登録します。
-*/
+// ルーティングを登録
 func (h *RegisterHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/register", h.RegisterPage)
 	r.Post("/register", h.Register)
 }
 
-/*
-	RegisterPage は新規登録画面を表示します。
-*/
+// 新規登録画面を表示
 func (h *RegisterHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
+	// すでにログインしている場合はダッシュボードにリダイレクト
+	if user := r.Context().Value(UserKey); user != nil {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
+
 	data := &TemplateData{
 		Title: "アカウント登録",
+		Data: map[string]interface{}{
+			"Form": &RegisterData{},
+		},
 	}
 
 	err := h.templates.Render(w, "register.html", data)
@@ -60,15 +65,14 @@ func (h *RegisterHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-	Register は新規登録処理を行います。
-*/
+// 新規登録処理
 func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "フォームの解析に失敗しました", http.StatusBadRequest)
 		return
 	}
 
+	// フォームデータの取得
 	registerData := &RegisterData{
 		Name:                 r.FormValue("name"),
 		Email:                r.FormValue("email"),
@@ -93,15 +97,52 @@ func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: ユーザー登録処理の実装
+	// ユーザー登録
+	_, err := h.service.User().Register(r.Context(), registerData.Email, registerData.Name, registerData.Password)
+	if err != nil {
+		// 既存のメールアドレスの場合
+		if err == service.ErrEmailAlreadyExists {
+			data := &TemplateData{
+				Title: "アカウント登録",
+				Data: map[string]interface{}{
+					"Form": registerData,
+				},
+				Flash: &Flash{
+					Type:    "danger",
+					Message: "このメールアドレスは既に登録されています",
+				},
+			}
+			h.templates.Render(w, "register.html", data)
+			return
+		}
 
-	// 登録成功後、ログインページにリダイレクト
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+		// その他のエラー
+		h.service.Logger().Printf("[ERROR] ユーザー登録エラー: error=%v", err)
+		data := &TemplateData{
+			Title: "アカウント登録",
+			Data: map[string]interface{}{
+				"Form": registerData,
+			},
+			Flash: &Flash{
+				Type:    "danger",
+				Message: "ユーザー登録に失敗しました",
+			},
+		}
+		h.templates.Render(w, "register.html", data)
+		return
+	}
+
+	// 確認メール送信
+	err = h.service.Email().SendWelcomeEmail(r.Context(), registerData.Email, registerData.Name)
+	if err != nil {
+		h.service.Logger().Printf("[ERROR] 確認メール送信エラー: error=%v", err)
+	}
+
+	// 登録成功時の処理
+	http.Redirect(w, r, "/register/complete", http.StatusSeeOther)
 }
 
-/*
-	validateRegisterData は新規登録データのバリデーションを行います。
-*/
+// 新規登録データのバリデーション
 func (h *RegisterHandler) validateRegisterData(data *RegisterData) error {
 	if data.Name == "" {
 		return fmt.Errorf("名前を入力してください")
@@ -139,4 +180,21 @@ func (h *RegisterHandler) validateRegisterData(data *RegisterData) error {
 	}
 
 	return nil
+}
+
+// 登録完了画面を表示
+func (h *RegisterHandler) RegistrationComplete(w http.ResponseWriter, r *http.Request) {
+	data := &TemplateData{
+		Title: "登録完了",
+		Flash: &Flash{
+			Type:    "success",
+			Message: "アカウント登録が完了しました。メールをご確認ください。",
+		},
+	}
+
+	err := h.templates.Render(w, "register-complete.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

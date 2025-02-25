@@ -1,0 +1,10 @@
+output: "doc/main.md"
+header: |-
+  [![Go Report Card](https://goreportcard.com/badge/github.com/223n-tech/SuiminNisshi-Go)](https://goreportcard.com/report/github.com/223n-tech/SuiminNisshi-Go)
+  [![GitHub Actions](https://github.com/223n-tech/SuiminNisshi-Go/workflows/Test/badge.svg)](https://github.com/223n-tech/SuiminNisshi-Go/actions?query=workflow%3ATest+branch%3Amaster)
+  [![Go Reference](https://pkg.go.dev/badge/github.com/223n-tech/SuiminNisshi-Go.svg)](https://pkg.go.dev/github.com/223n-tech/SuiminNisshi-Go)
+  [![codecov](https://codecov.io/gh/223n-tech/SuiminNisshi-Go/branch/master/graph/badge.svg?token=171XNH5XLT)](https://codecov.io/gh/223n-tech/SuiminNisshi-Go)
+repository:
+  url: https://github.com/223n-tech/SuiminNisshi-Go
+  defaultBranch: master
+  path: /

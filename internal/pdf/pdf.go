@@ -1,5 +1,7 @@
 // internal/pdf/pdf.go
+// pdfは、PDFを生成するための機能を提供します。
 
+// Package pdf provides functionality to generate PDFs.
 package pdf
 
 import (
@@ -10,13 +12,13 @@ import (
 	"github.com/signintech/gopdf"
 )
 
-// Generator PDFを生成するための構造体
+// PDFを生成するための構造体
 type Generator struct {
 	pdf      *gopdf.GoPdf
 	fontPath string
 }
 
-// New 新しいPDFジェネレーターを作成
+// 新しいPDFジェネレーターを作成
 func New(fontPath string) *Generator {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
@@ -27,7 +29,7 @@ func New(fontPath string) *Generator {
 	}
 }
 
-// GenerateSleepRecord 睡眠記録のPDFを生成
+// 睡眠記録のPDFを生成
 func (g *Generator) GenerateSleepRecord(data *SleepRecordData) (*bytes.Buffer, error) {
 	// フォントの設定
 	err := g.setupFont()
@@ -76,7 +78,7 @@ func (g *Generator) GenerateSleepRecord(data *SleepRecordData) (*bytes.Buffer, e
 	return &buf, nil
 }
 
-// setupFont フォントの設定
+// フォントの設定
 func (g *Generator) setupFont() error {
 	err := g.pdf.AddTTFFont("gothic", g.fontPath)
 	if err != nil {
@@ -85,7 +87,7 @@ func (g *Generator) setupFont() error {
 	return nil
 }
 
-// writeBasicInfo 基本情報を書き込み
+// 基本情報を書き込み
 func (g *Generator) writeBasicInfo(data *SleepRecordData) error {
 	if err := g.pdf.SetFont("gothic", "", 14); err != nil {
 		return err
@@ -125,7 +127,7 @@ func (g *Generator) writeBasicInfo(data *SleepRecordData) error {
 	return nil
 }
 
-// writeSleepData 睡眠データを書き込み
+// 睡眠データを書き込み
 func (g *Generator) writeSleepData(data *SleepRecordData) error {
 	if err := g.pdf.SetFont("gothic", "", 14); err != nil {
 		return err
@@ -184,7 +186,7 @@ func (g *Generator) writeSleepData(data *SleepRecordData) error {
 	return nil
 }
 
-// writeStatistics 統計データを書き込み
+// 統計データを書き込み
 func (g *Generator) writeStatistics(data *SleepRecordData) error {
 	if err := g.pdf.SetFont("gothic", "", 14); err != nil {
 		return err
@@ -222,7 +224,7 @@ func (g *Generator) writeStatistics(data *SleepRecordData) error {
 	return nil
 }
 
-// SleepRecordData PDFに出力する睡眠記録データ
+// PDFに出力する睡眠記録データ
 type SleepRecordData struct {
 	StartDate       time.Time
 	EndDate         time.Time
@@ -234,7 +236,7 @@ type SleepRecordData struct {
 	AverageScore    float64
 }
 
-// SleepRecord 個別の睡眠記録
+// 個別の睡眠記録
 type SleepRecord struct {
 	Date     time.Time
 	BedTime  string
